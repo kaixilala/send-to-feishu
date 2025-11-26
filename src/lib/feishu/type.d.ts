@@ -14,9 +14,21 @@ declare global {
 		data: T;
 	};
 
-	type SheetRangeIndex = { startIndex: string | undefined; endIndex: string | undefined };
+	type SheetRangeIndex = { startIndex: string; endIndex: string };
 
 	type SheetFormType = {
+		/**
+		 *  配置id
+		 */
+		id: string;
+		/**
+		 *  配置名称
+		 */
+		name: string;
+		/**
+		 * 表单类型名称
+		 */
+		formType: '飞书表格';
 		/**
 		 * 电子表格的 token。
 		 */
@@ -33,6 +45,18 @@ declare global {
 
 	type BitableFormType = {
 		/**
+		 *  配置id
+		 */
+		id: string;
+		/**
+		 *  配置名称
+		 */
+		name: string;
+		/**
+		 * 表单类型名称
+		 */
+		formType: '多维表格';
+		/**
 		 * 多维表格的 token。
 		 */
 		appToken: string;
@@ -44,18 +68,28 @@ declare global {
 
 	type DocFrommType = {
 		/**
+		 *  配置id
+		 */
+		id: string;
+		/**
+		 *  配置名称
+		 */
+		name: string;
+		/**
+		 * 表单类型名称
+		 */
+		formType: '飞书文档';
+		/**
 		 * 指定飞书文件夹的 token。
 		 */
 		folderToken: string;
 	};
 
-	type Forms = {
-		sheetForms: Record<string, SheetFormType>;
-		bitableForms: Record<string, BitableFormType>;
-		docForms: Record<string, DocFrommType>;
-	};
-
 	type FormType = SheetFormType | BitableFormType | DocFrommType;
+
+	type Forms = FormType[];
+
+	type FormTypeName = '飞书表格' | '多维表格' | '飞书文档';
 }
 
 export {};

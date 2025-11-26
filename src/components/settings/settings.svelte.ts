@@ -2,39 +2,72 @@ class Credentials {
 	/**
 	 * 飞书应用的 App ID。
 	 */
-	feishuAppId: string | undefined = $state();
+	feishuAppId: string = $state('');
 	/**
 	 * 飞书应用的 App Secret。
 	 */
-	feishuAppSecret: string | undefined = $state();
+	feishuAppSecret: string = $state('');
+	/**
+	 * 飞书应用的基础链接。
+	 */
+	feishuBaseUrl: string = $state('');
 
 	constructor() {
 		this.get();
 	}
 
-	async set(feishuAppId: string, feishuAppSecret: string) {
+	async set(feishuAppId: string, feishuAppSecret: string, feishuBaseUrl: string) {
 		this.feishuAppId = feishuAppId;
 		this.feishuAppSecret = feishuAppSecret;
+		this.feishuBaseUrl = feishuBaseUrl;
 		await chrome.storage.local.set({
 			feishuAppId,
-			feishuAppSecret
+			feishuAppSecret,
+			feishuBaseUrl
 		});
 	}
 
 	async get() {
-		const result = await chrome.storage.local.get(['feishuAppId', 'feishuAppSecret']);
-		this.feishuAppId = (result.feishuAppId as string) || undefined;
-		this.feishuAppSecret = (result.feishuAppSecret as string) || undefined;
+		const result = await chrome.storage.local.get([
+			'feishuAppId',
+			'feishuAppSecret',
+			'feishuBaseUrl'
+		]);
+		this.feishuAppId = (result.feishuAppId as string) || '';
+		this.feishuAppSecret = (result.feishuAppSecret as string) || '';
+		this.feishuBaseUrl = (result.feishuBaseUrl as string) || '';
 	}
 }
 
 export const credentials = new Credentials();
 
+class FormsManager {
+	static async init(): Promise<Forms> {
+		const result = await chrome.storage.local.get('forms');
+		const forms = (result.forms as Forms) || [];
+		return forms;
+	}
+}
+
+export const allForms: Forms = $state([]);
+
+FormsManager.init().then((data) => {
+	allForms.push(...data);
+});
+
 export class SheetForm {
+	/**
+	 * 配置 ID
+	 */
+	readonly id: string = $state('');
 	/**
 	 * 配置名称
 	 */
 	name: string = $state('');
+	/**
+	 * 表单类型名称
+	 */
+	readonly formType = '飞书表格' as const;
 	/**
 	 * 电子表格的 token。
 	 */
@@ -47,43 +80,94 @@ export class SheetForm {
 	 * 电子表格工作表的范围索引。
 	 */
 	rangeIndex: SheetRangeIndex = $state({
-		startIndex: undefined,
-		endIndex: undefined
+		startIndex: '',
+		endIndex: ''
 	});
 
-	constructor(name: string, sheetToken: string, sheetId: string, rangeIndex: SheetRangeIndex) {
+	constructor(
+		id?: string,
+		name: string = '',
+		sheetToken: string = '',
+		sheetId: string = '',
+		rangeIndex: SheetRangeIndex = {
+			startIndex: '',
+			endIndex: ''
+		}
+	) {
+		this.id = id || crypto.randomUUID();
 		this.name = name;
 		this.sheetToken = sheetToken;
 		this.sheetId = sheetId;
-		this.rangeIndex = rangeIndex;
+		this.rangeIndex = rangeIndex || { startIndex: '', endIndex: '' };
 	}
 
 	async save() {
 		const name = this.name?.trim();
 		if (!name) throw new Error('配置名称不能为空');
-		const result = (await chrome.storage.local.get(['sheetForms'])) as Forms;
-		const sheetForms = result.sheetForms;
-		sheetForms[name] = {
+
+		// 构造要保存的数据对象
+		const formData = {
+			id: this.id,
+			name: name,
+			formType: this.formType,
 			sheetToken: this.sheetToken,
 			sheetId: this.sheetId,
-			rangeIndex: this.rangeIndex || undefined
+			rangeIndex: this.rangeIndex
 		};
-		await chrome.storage.local.set({ sheetForms });
+
+		// 查找是否存在现有项
+		const number = allForms.findIndex((item) => this.id === item.id);
+
+		if (number != -1) {
+			// 1. 更新现有项
+			// 注意：这里直接修改 item 会触发 Svelte 5 的响应式更新
+			allForms[number] = formData;
+		} else {
+			// 2. 新增项
+			// 推入全局数组
+			allForms.push(formData);
+		}
+
+		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
 	}
 
-	async set(sheetToken: string, sheetId: string, rangeIndex: SheetRangeIndex) {
+	async set(name: string, sheetToken: string, sheetId: string, rangeIndex: SheetRangeIndex) {
+		this.name = name;
 		this.sheetToken = sheetToken;
 		this.sheetId = sheetId;
 		this.rangeIndex = rangeIndex;
 		await this.save();
 	}
+
+	async delete() {
+		const number = allForms.findIndex((item) => this.id === item.id);
+
+		if (number == -1) {
+			throw new Error('找不到对应的配置项');
+		}
+		// 1. 从内存中删除
+		allForms.splice(number, 1);
+		// 2. 同步到存储
+		await chrome.storage.local.set({
+			forms: $state.snapshot(allForms)
+		});
+	}
 }
 
+// ... existing code ...
 export class BitableForm {
+	/**
+	 * 配置 ID
+	 */
+	readonly id: string = $state('');
 	/**
 	 * 配置名称
 	 */
 	name: string = $state('');
+	/**
+	 * 表单类型名称
+	 */
+	readonly formType = '多维表格' as const;
 	/**
 	 * 多维表格的 token。
 	 */
@@ -93,7 +177,8 @@ export class BitableForm {
 	 */
 	tableId: string = $state('');
 
-	constructor(name: string, appToken: string, tableId: string) {
+	constructor(id?: string, name: string = '', appToken: string = '', tableId: string = '') {
+		this.id = id || crypto.randomUUID();
 		this.name = name;
 		this.appToken = appToken;
 		this.tableId = tableId;
@@ -102,13 +187,29 @@ export class BitableForm {
 	async save() {
 		const name = this.name?.trim();
 		if (!name) throw new Error('配置名称不能为空');
-		const result = (await chrome.storage.local.get(['bitableForms'])) as Forms;
-		const bitableForms = result.bitableForms;
-		bitableForms[name] = {
+
+		// 构造要保存的数据对象
+		const formData = {
+			id: this.id,
+			name: name,
+			formType: this.formType,
 			appToken: this.appToken,
 			tableId: this.tableId
 		};
-		await chrome.storage.local.set({ bitableForms });
+
+		// 查找是否存在现有项
+		const number = allForms.findIndex((item) => this.id === item.id);
+
+		if (number != -1) {
+			// 1. 更新现有项
+			allForms[number] = formData;
+		} else {
+			// 2. 新增项
+			allForms.push(formData);
+		}
+
+		// 持久化到存储
+		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
 	}
 
 	async set(appToken: string, tableId: string) {
@@ -116,19 +217,42 @@ export class BitableForm {
 		this.tableId = tableId;
 		await this.save();
 	}
+
+	async delete() {
+		const number = allForms.findIndex((item) => this.id === item.id);
+
+		if (number == -1) {
+			throw new Error('找不到对应的配置项');
+		}
+		// 1. 从内存中删除
+		allForms.splice(number, 1);
+		// 2. 同步到存储
+		await chrome.storage.local.set({
+			forms: $state.snapshot(allForms)
+		});
+	}
 }
 
 export class DocForm {
+	/**
+	 * 配置 ID
+	 */
+	readonly id: string = $state('');
 	/**
 	 * 配置名称
 	 */
 	name: string = $state('');
 	/**
+	 * 表单类型名称
+	 */
+	readonly formType = '飞书文档' as const;
+	/**
 	 * 指定飞书文件夹的 token。
 	 */
 	folderToken: string = $state('');
 
-	constructor(name: string, folderToken: string) {
+	constructor(id?: string, name: string = '', folderToken: string = '') {
+		this.id = id || crypto.randomUUID();
 		this.name = name;
 		this.folderToken = folderToken;
 	}
@@ -136,71 +260,47 @@ export class DocForm {
 	async save() {
 		const name = this.name?.trim();
 		if (!name) throw new Error('配置名称不能为空');
-		const result = (await chrome.storage.local.get(['docForms'])) as Forms;
-		const docForms = result.docForms;
 		if (!this.folderToken) throw new Error('folderToken 不能为空');
-		docForms[name] = {
+
+		// 构造要保存的数据对象
+		const formData = {
+			id: this.id,
+			name: name,
+			formType: this.formType,
 			folderToken: this.folderToken
 		};
-		await chrome.storage.local.set({ docForms });
+
+		// 查找是否存在现有项
+		const number = allForms.findIndex((item) => this.id === item.id);
+
+		if (number != -1) {
+			// 1. 更新现有项
+			allForms[number] = formData;
+		} else {
+			// 2. 新增项
+			allForms.push(formData);
+		}
+
+		// 持久化到存储
+		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
 	}
 
 	async set(folderToken: string) {
 		this.folderToken = folderToken;
 		await this.save();
 	}
-}
 
-export class FormsManager {
-	async getAllSheetForms() {
-		const lcoals = (await chrome.storage.local.get(['sheetForms'])) as Forms;
+	async delete() {
+		const number = allForms.findIndex((item) => this.id === item.id);
 
-		const sheetForms = lcoals.sheetForms || {};
-
-		const forms: SheetForm[] = [];
-
-		Object.entries(sheetForms).forEach(([name, form]) => {
-			forms.push(
-				new SheetForm(name, form.sheetToken as string, form.sheetId as string, form.rangeIndex)
-			);
+		if (number == -1) {
+			throw new Error('找不到对应的配置项');
+		}
+		// 1. 从内存中删除
+		allForms.splice(number, 1);
+		// 2. 同步到存储
+		await chrome.storage.local.set({
+			forms: $state.snapshot(allForms)
 		});
-
-		return forms;
-	}
-
-	async getAllBitableForms() {
-		const result = (await chrome.storage.local.get(['bitableForms'])) as Forms;
-
-		const bitableForms = result.bitableForms || {};
-
-		const forms: BitableForm[] = [];
-
-		Object.entries(bitableForms).forEach(([name, form]) => {
-			forms.push(new BitableForm(name, form.appToken as string, form.tableId as string));
-		});
-
-		return forms;
-	}
-
-	async getAllDocForms() {
-		const result = (await chrome.storage.local.get(['docForms'])) as Forms;
-
-		const docForms = result.docForms || {};
-
-		const forms: DocForm[] = [];
-
-		Object.entries(docForms).forEach(([name, form]) => {
-			forms.push(new DocForm(name, form.folderToken as string));
-		});
-
-		return forms;
-	}
-
-	async getAllForms(): Promise<Array<SheetForm | BitableForm | DocForm>> {
-		const sheetForms = await this.getAllSheetForms();
-		const bitableForms = await this.getAllBitableForms();
-		const docForms = await this.getAllDocForms();
-
-		return [...sheetForms, ...bitableForms, ...docForms];
 	}
 }

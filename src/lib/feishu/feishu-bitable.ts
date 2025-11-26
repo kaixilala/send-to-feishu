@@ -50,4 +50,6 @@ export class FeishuBitableManager {
 			throw new Error(`飞书多维表格接口报错：${resData.msg}`);
 		}
 	}
+	
+	// TODO: 读取多维表格字段，增加可视化的索引范围选择
 }

@@ -110,6 +110,27 @@ abstract class BaseToken {
 }
 
 export class FeishuToken extends BaseToken {
+	constructor(
+		tokenUrl: string,
+		init: RequestInit,
+		/**
+		 * 用户飞书文档的基础链接，例如 https://example.feishu.cn/
+		 */
+		private baseUrl: string
+	) {
+		super(tokenUrl, init);
+
+		if (!baseUrl.startsWith('https://')) {
+			throw new Error('飞书文档基础链接必须以 https:// 开头');
+		}
+
+		if (!baseUrl.endsWith('/')) {
+			baseUrl += '/';
+		}
+
+		this.baseUrl = baseUrl;
+	}
+
 	protected durationInSeconds: number = 7000; // 飞书 token 有效期默认 7200 秒，这里设置 7000 秒，以防万一
 
 	protected async enforceGetToken(): Promise<string> {
@@ -131,7 +152,7 @@ export class FeishuToken extends BaseToken {
 	}
 }
 
-export function createFeishuTokenManager(appId: string, appSecret: string) {
+export function createFeishuTokenManager(appId: string, appSecret: string, baseUrl: string) {
 	const FEISHU_TENANT_URL = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal';
 
 	const feishuInit = {
@@ -145,7 +166,7 @@ export function createFeishuTokenManager(appId: string, appSecret: string) {
 		})
 	};
 
-	const feishuToken = new FeishuToken(FEISHU_TENANT_URL, feishuInit);
+	const feishuToken = new FeishuToken(FEISHU_TENANT_URL, feishuInit, baseUrl);
 
 	return feishuToken;
 }

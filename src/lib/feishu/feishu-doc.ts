@@ -7,8 +7,6 @@ type CreateDocResponse = {
 	};
 };
 
-
-
 export class FeishuDocManager {
 	constructor(
 		/**

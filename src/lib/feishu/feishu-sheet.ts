@@ -2,7 +2,6 @@
 import { FeishuToken } from './feishu-token-manager';
 type AppendDataPayload = Array<Array<string | { text: string; link: string; type: 'url' }>>;
 
-
 export class FeishuSheetManager {
 	constructor(
 		/**
@@ -21,7 +20,7 @@ export class FeishuSheetManager {
 		/**
 		 * 电子表格工作表的范围索引。
 		 */
-		private rangeIndex?: SheetRangeIndex
+		private rangeIndex: SheetRangeIndex
 	) {}
 
 	/**
@@ -29,7 +28,7 @@ export class FeishuSheetManager {
 	 * @returns
 	 */
 	private getRange(): string {
-		if (!this.rangeIndex) {
+		if (this.rangeIndex.endIndex === '' || this.rangeIndex.startIndex === '') {
 			return this.sheetId;
 		}
 		return `${this.sheetId}!${this.rangeIndex.startIndex}:${this.rangeIndex.endIndex}`;
@@ -67,4 +66,6 @@ export class FeishuSheetManager {
 			throw new Error(`飞书表格接口报错：${resData.msg}`);
 		}
 	}
+
+	// TODO: 读取飞书表格字段，增加可视化的索引范围选择
 }
