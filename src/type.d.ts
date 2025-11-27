@@ -89,7 +89,13 @@ declare global {
 
 	type Forms = FormType[];
 
-	type FormTypeName = '飞书表格' | '多维表格' | '飞书文档';
+	type FormTypeName = 'sheet' | 'bitable' | 'doc';
+	type EditMode = 'create' | 'edit';
+	type PageType =
+		| 'index'
+		| 'settings'
+		| 'formList'
+		| 'formEdit'
 }
 
 export {};

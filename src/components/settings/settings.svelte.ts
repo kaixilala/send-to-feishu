@@ -331,3 +331,22 @@ export class DocForm {
 		});
 	}
 }
+
+export function getFormById(id: string): DocForm | BitableForm | SheetForm | undefined {
+	const form = allForms.find((form) => form.id === id);
+
+	if (!form) {
+		return undefined;
+	}
+
+	switch (form.formType) {
+		case '飞书文档':
+			return new DocForm(form.id, form.name, form.folderToken);
+		case '多维表格':
+			return new BitableForm(form.id, form.name, form.appToken, form.tableId);
+		case '飞书表格':
+			return new SheetForm(form.id, form.name, form.sheetToken, form.sheetId, form.rangeIndex);
+		default:
+			return undefined;
+	}
+}

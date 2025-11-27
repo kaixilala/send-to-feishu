@@ -17,14 +17,14 @@
 			}
 
 			alert('保存成功，凭证有效');
-			// TODO:跳转到上一级页面
+			window.location.href = chrome.runtime.getURL('src/pages/formlist/index.html');
 		} catch (e) {
 			alert('保存失败：' + (e as Error).message);
 		}
 	}
 </script>
 
-<div class="container mx-auto p-2">
+<div class="container mx-auto">
 	<fieldset class="mx-auto fieldset w-xs rounded-box border border-base-300 bg-base-200 p-4">
 		<legend class="fieldset-legend">配置飞书访问凭证</legend>
 		<p class="label text-wrap">
@@ -55,7 +55,6 @@
 		/>
 
 		<!-- 基础链接 -->
-
 		<label for="feishuBaseUrl" class="label">基础链接 </label>
 		<input
 			id="feishuBaseUrl"
