@@ -18,7 +18,7 @@ declare global {
 
 	type SheetFormType = {
 		/**
-		 *  配置id
+		 *  配置 id
 		 */
 		id: string;
 		/**
@@ -45,7 +45,7 @@ declare global {
 
 	type BitableFormType = {
 		/**
-		 *  配置id
+		 *  配置 id
 		 */
 		id: string;
 		/**
@@ -68,7 +68,7 @@ declare global {
 
 	type DocFrommType = {
 		/**
-		 *  配置id
+		 *  配置 id
 		 */
 		id: string;
 		/**

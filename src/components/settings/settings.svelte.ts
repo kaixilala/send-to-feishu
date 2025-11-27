@@ -63,290 +63,259 @@ export const credentials = await (async () => {
 	return cred;
 })();
 
-class FormsManager {
-	static async init(): Promise<Forms> {
-		const result = await chrome.storage.local.get('forms');
-		const forms = (result.forms as Forms) || [];
-		return forms;
-	}
-}
 
-export const allForms: Forms = $state([]);
 
-FormsManager.init().then((data) => {
-	allForms.push(...data);
-});
+// export class SheetForm {
+// 	/**
+// 	 * 配置 ID
+// 	 */
+// 	readonly id: string = $state('');
+// 	/**
+// 	 * 配置名称
+// 	 */
+// 	name: string = $state('');
+// 	/**
+// 	 * 表单类型名称
+// 	 */
+// 	readonly formType = '飞书表格' as const;
+// 	/**
+// 	 * 电子表格的 token。
+// 	 */
+// 	sheetToken: string = $state('');
+// 	/**
+// 	 * 电子表格工作表的 ID。
+// 	 */
+// 	sheetId: string = $state('');
+// 	/**
+// 	 * 电子表格工作表的范围索引。
+// 	 */
+// 	rangeIndex: SheetRangeIndex = $state({
+// 		startIndex: '',
+// 		endIndex: ''
+// 	});
 
-export class SheetForm {
-	/**
-	 * 配置 ID
-	 */
-	readonly id: string = $state('');
-	/**
-	 * 配置名称
-	 */
-	name: string = $state('');
-	/**
-	 * 表单类型名称
-	 */
-	readonly formType = '飞书表格' as const;
-	/**
-	 * 电子表格的 token。
-	 */
-	sheetToken: string = $state('');
-	/**
-	 * 电子表格工作表的 ID。
-	 */
-	sheetId: string = $state('');
-	/**
-	 * 电子表格工作表的范围索引。
-	 */
-	rangeIndex: SheetRangeIndex = $state({
-		startIndex: '',
-		endIndex: ''
-	});
+// 	constructor(
+// 		id?: string,
+// 		name: string = '',
+// 		sheetToken: string = '',
+// 		sheetId: string = '',
+// 		rangeIndex: SheetRangeIndex = {
+// 			startIndex: '',
+// 			endIndex: ''
+// 		}
+// 	) {
+// 		this.id = id || crypto.randomUUID();
+// 		this.name = name;
+// 		this.sheetToken = sheetToken;
+// 		this.sheetId = sheetId;
+// 		this.rangeIndex = rangeIndex || { startIndex: '', endIndex: '' };
+// 	}
 
-	constructor(
-		id?: string,
-		name: string = '',
-		sheetToken: string = '',
-		sheetId: string = '',
-		rangeIndex: SheetRangeIndex = {
-			startIndex: '',
-			endIndex: ''
-		}
-	) {
-		this.id = id || crypto.randomUUID();
-		this.name = name;
-		this.sheetToken = sheetToken;
-		this.sheetId = sheetId;
-		this.rangeIndex = rangeIndex || { startIndex: '', endIndex: '' };
-	}
+// 	async save() {
+// 		const name = this.name?.trim();
+// 		if (!name) throw new Error('配置名称不能为空');
+// 		if (!this.sheetToken) throw new Error('sheetToken 不能为空');
+// 		if (!this.sheetId) throw new Error('sheetId 不能为空');
 
-	async save() {
-		const name = this.name?.trim();
-		if (!name) throw new Error('配置名称不能为空');
-		if (!this.sheetToken) throw new Error('sheetToken 不能为空');
-		if (!this.sheetId) throw new Error('sheetId 不能为空');
+// 		// 构造要保存的数据对象
+// 		const formData: SheetFormType = {
+// 			id: this.id,
+// 			name: name,
+// 			formType: this.formType,
+// 			sheetToken: this.sheetToken,
+// 			sheetId: this.sheetId,
+// 			rangeIndex: this.rangeIndex
+// 		};
 
-		// 构造要保存的数据对象
-		const formData: SheetFormType = {
-			id: this.id,
-			name: name,
-			formType: this.formType,
-			sheetToken: this.sheetToken,
-			sheetId: this.sheetId,
-			rangeIndex: this.rangeIndex
-		};
+// 		// 查找是否存在现有项
+// 		const number = allForms.findIndex((item) => this.id === item.id);
 
-		// 查找是否存在现有项
-		const number = allForms.findIndex((item) => this.id === item.id);
+// 		if (number != -1) {
+// 			// 1. 更新现有项
+// 			// 注意：这里直接修改 item 会触发 Svelte 5 的响应式更新
+// 			allForms[number] = formData;
+// 		} else {
+// 			// 2. 新增项
+// 			// 推入全局数组
+// 			allForms.push(formData);
+// 		}
 
-		if (number != -1) {
-			// 1. 更新现有项
-			// 注意：这里直接修改 item 会触发 Svelte 5 的响应式更新
-			allForms[number] = formData;
-		} else {
-			// 2. 新增项
-			// 推入全局数组
-			allForms.push(formData);
-		}
+// 		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
+// 	}
 
-		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
-	}
+// 	async set(name: string, sheetToken: string, sheetId: string, rangeIndex: SheetRangeIndex) {
+// 		this.name = name;
+// 		this.sheetToken = sheetToken;
+// 		this.sheetId = sheetId;
+// 		this.rangeIndex = rangeIndex;
+// 		await this.save();
+// 	}
 
-	async set(name: string, sheetToken: string, sheetId: string, rangeIndex: SheetRangeIndex) {
-		this.name = name;
-		this.sheetToken = sheetToken;
-		this.sheetId = sheetId;
-		this.rangeIndex = rangeIndex;
-		await this.save();
-	}
+// 	async delete() {
+// 		const number = allForms.findIndex((item) => this.id === item.id);
 
-	async delete() {
-		const number = allForms.findIndex((item) => this.id === item.id);
+// 		if (number == -1) {
+// 			throw new Error('找不到对应的配置项');
+// 		}
+// 		// 1. 从内存中删除
+// 		allForms.splice(number, 1);
+// 		// 2. 同步到存储
+// 		await chrome.storage.local.set({
+// 			forms: $state.snapshot(allForms)
+// 		});
+// 	}
+// }
 
-		if (number == -1) {
-			throw new Error('找不到对应的配置项');
-		}
-		// 1. 从内存中删除
-		allForms.splice(number, 1);
-		// 2. 同步到存储
-		await chrome.storage.local.set({
-			forms: $state.snapshot(allForms)
-		});
-	}
-}
+// // ... existing code ...
+// export class BitableForm {
+// 	/**
+// 	 * 配置 ID
+// 	 */
+// 	readonly id: string = $state('');
+// 	/**
+// 	 * 配置名称
+// 	 */
+// 	name: string = $state('');
+// 	/**
+// 	 * 表单类型名称
+// 	 */
+// 	readonly formType = '多维表格' as const;
+// 	/**
+// 	 * 多维表格的 token。
+// 	 */
+// 	appToken: string = $state('');
+// 	/**
+// 	 * 多维表格的数据表的 ID。
+// 	 */
+// 	tableId: string = $state('');
 
-// ... existing code ...
-export class BitableForm {
-	/**
-	 * 配置 ID
-	 */
-	readonly id: string = $state('');
-	/**
-	 * 配置名称
-	 */
-	name: string = $state('');
-	/**
-	 * 表单类型名称
-	 */
-	readonly formType = '多维表格' as const;
-	/**
-	 * 多维表格的 token。
-	 */
-	appToken: string = $state('');
-	/**
-	 * 多维表格的数据表的 ID。
-	 */
-	tableId: string = $state('');
+// 	constructor(id?: string, name: string = '', appToken: string = '', tableId: string = '') {
+// 		this.id = id || crypto.randomUUID();
+// 		this.name = name;
+// 		this.appToken = appToken;
+// 		this.tableId = tableId;
+// 	}
 
-	constructor(id?: string, name: string = '', appToken: string = '', tableId: string = '') {
-		this.id = id || crypto.randomUUID();
-		this.name = name;
-		this.appToken = appToken;
-		this.tableId = tableId;
-	}
+// 	async save() {
+// 		const name = this.name?.trim();
+// 		if (!name) throw new Error('配置名称不能为空');
+// 		if (!this.appToken) throw new Error('appToken 不能为空');
+// 		if (!this.tableId) throw new Error('tableId 不能为空');
 
-	async save() {
-		const name = this.name?.trim();
-		if (!name) throw new Error('配置名称不能为空');
-		if (!this.appToken) throw new Error('appToken 不能为空');
-		if (!this.tableId) throw new Error('tableId 不能为空');
+// 		// 构造要保存的数据对象
+// 		const formData: BitableFormType = {
+// 			id: this.id,
+// 			name: name,
+// 			formType: this.formType,
+// 			appToken: this.appToken,
+// 			tableId: this.tableId
+// 		};
 
-		// 构造要保存的数据对象
-		const formData: BitableFormType = {
-			id: this.id,
-			name: name,
-			formType: this.formType,
-			appToken: this.appToken,
-			tableId: this.tableId
-		};
+// 		// 查找是否存在现有项
+// 		const number = allForms.findIndex((item) => this.id === item.id);
 
-		// 查找是否存在现有项
-		const number = allForms.findIndex((item) => this.id === item.id);
+// 		if (number != -1) {
+// 			// 1. 更新现有项
+// 			allForms[number] = formData;
+// 		} else {
+// 			// 2. 新增项
+// 			allForms.push(formData);
+// 		}
 
-		if (number != -1) {
-			// 1. 更新现有项
-			allForms[number] = formData;
-		} else {
-			// 2. 新增项
-			allForms.push(formData);
-		}
+// 		// 持久化到存储
+// 		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
+// 	}
 
-		// 持久化到存储
-		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
-	}
+// 	async set(appToken: string, tableId: string) {
+// 		this.appToken = appToken;
+// 		this.tableId = tableId;
+// 		await this.save();
+// 	}
 
-	async set(appToken: string, tableId: string) {
-		this.appToken = appToken;
-		this.tableId = tableId;
-		await this.save();
-	}
+// 	async delete() {
+// 		const number = allForms.findIndex((item) => this.id === item.id);
 
-	async delete() {
-		const number = allForms.findIndex((item) => this.id === item.id);
+// 		if (number == -1) {
+// 			throw new Error('找不到对应的配置项');
+// 		}
+// 		// 1. 从内存中删除
+// 		allForms.splice(number, 1);
+// 		// 2. 同步到存储
+// 		await chrome.storage.local.set({
+// 			forms: $state.snapshot(allForms)
+// 		});
+// 	}
+// }
 
-		if (number == -1) {
-			throw new Error('找不到对应的配置项');
-		}
-		// 1. 从内存中删除
-		allForms.splice(number, 1);
-		// 2. 同步到存储
-		await chrome.storage.local.set({
-			forms: $state.snapshot(allForms)
-		});
-	}
-}
+// export class DocForm {
+// 	/**
+// 	 * 配置 ID
+// 	 */
+// 	readonly id: string = $state('');
+// 	/**
+// 	 * 配置名称
+// 	 */
+// 	name: string = $state('');
+// 	/**
+// 	 * 表单类型名称
+// 	 */
+// 	readonly formType = '飞书文档' as const;
+// 	/**
+// 	 * 指定飞书文件夹的 token。
+// 	 */
+// 	folderToken: string = $state('');
 
-export class DocForm {
-	/**
-	 * 配置 ID
-	 */
-	readonly id: string = $state('');
-	/**
-	 * 配置名称
-	 */
-	name: string = $state('');
-	/**
-	 * 表单类型名称
-	 */
-	readonly formType = '飞书文档' as const;
-	/**
-	 * 指定飞书文件夹的 token。
-	 */
-	folderToken: string = $state('');
+// 	constructor(id?: string, name: string = '', folderToken: string = '') {
+// 		this.id = id || crypto.randomUUID();
+// 		this.name = name;
+// 		this.folderToken = folderToken;
+// 	}
 
-	constructor(id?: string, name: string = '', folderToken: string = '') {
-		this.id = id || crypto.randomUUID();
-		this.name = name;
-		this.folderToken = folderToken;
-	}
+// 	async save() {
+// 		const name = this.name?.trim();
+// 		if (!name) throw new Error('配置名称不能为空');
+// 		if (!this.folderToken) throw new Error('folderToken 不能为空');
 
-	async save() {
-		const name = this.name?.trim();
-		if (!name) throw new Error('配置名称不能为空');
-		if (!this.folderToken) throw new Error('folderToken 不能为空');
+// 		// 构造要保存的数据对象
+// 		const formData: DocFrommType = {
+// 			id: this.id,
+// 			name: name,
+// 			formType: this.formType,
+// 			folderToken: this.folderToken
+// 		};
 
-		// 构造要保存的数据对象
-		const formData: DocFrommType = {
-			id: this.id,
-			name: name,
-			formType: this.formType,
-			folderToken: this.folderToken
-		};
+// 		// 查找是否存在现有项
+// 		const number = allForms.findIndex((item) => this.id === item.id);
 
-		// 查找是否存在现有项
-		const number = allForms.findIndex((item) => this.id === item.id);
+// 		if (number != -1) {
+// 			// 1. 更新现有项
+// 			allForms[number] = formData;
+// 		} else {
+// 			// 2. 新增项
+// 			allForms.push(formData);
+// 		}
 
-		if (number != -1) {
-			// 1. 更新现有项
-			allForms[number] = formData;
-		} else {
-			// 2. 新增项
-			allForms.push(formData);
-		}
+// 		// 持久化到存储
+// 		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
+// 	}
 
-		// 持久化到存储
-		await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
-	}
+// 	async set(name: string, folderToken: string) {
+// 		this.name = name;
+// 		this.folderToken = folderToken;
+// 		await this.save();
+// 	}
 
-	async set(name: string, folderToken: string) {
-		this.name = name;
-		this.folderToken = folderToken;
-		await this.save();
-	}
+// 	async delete() {
+// 		const number = allForms.findIndex((item) => this.id === item.id);
 
-	async delete() {
-		const number = allForms.findIndex((item) => this.id === item.id);
-
-		if (number == -1) {
-			throw new Error('找不到对应的配置项');
-		}
-		// 1. 从内存中删除
-		allForms.splice(number, 1);
-		// 2. 同步到存储
-		await chrome.storage.local.set({
-			forms: $state.snapshot(allForms)
-		});
-	}
-}
-
-export function getFormById(id: string): DocForm | BitableForm | SheetForm | undefined {
-	const form = allForms.find((form) => form.id === id);
-
-	if (!form) {
-		return undefined;
-	}
-
-	switch (form.formType) {
-		case '飞书文档':
-			return new DocForm(form.id, form.name, form.folderToken);
-		case '多维表格':
-			return new BitableForm(form.id, form.name, form.appToken, form.tableId);
-		case '飞书表格':
-			return new SheetForm(form.id, form.name, form.sheetToken, form.sheetId, form.rangeIndex);
-		default:
-			return undefined;
-	}
-}
+// 		if (number == -1) {
+// 			throw new Error('找不到对应的配置项');
+// 		}
+// 		// 1. 从内存中删除
+// 		allForms.splice(number, 1);
+// 		// 2. 同步到存储
+// 		await chrome.storage.local.set({
+// 			forms: $state.snapshot(allForms)
+// 		});
+// 	}
+// }

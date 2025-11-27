@@ -1,7 +1,7 @@
 // API 参考文档 https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-record/create?appId=cli_a7a5d48eeab81013
 import { FeishuToken } from './feishu-token-manager';
 
-type AppendDataPayload = Record<
+export type BitablePayload = Record<
 	'fields',
 	Record<string, string | Record<string, unknown> | Array<Record<string, string>>>
 >;
@@ -26,7 +26,7 @@ export class FeishuBitableManager {
 	 *  向飞书多维表格中创建记录
 	 * @param payload - 要创建的记录数据
 	 */
-	async createRecord(payload: AppendDataPayload) {
+	async createRecord(payload: BitablePayload) {
 		const url = `https://open.feishu.cn/open-apis/bitable/v1/apps/${this.appToken}/tables/${this.tableId}/records`;
 		const headers = {
 			Authorization: `Bearer ${await this.tokenManager.getToken()}`,
@@ -50,6 +50,6 @@ export class FeishuBitableManager {
 			throw new Error(`飞书多维表格接口报错：${resData.msg}`);
 		}
 	}
-	
+
 	// TODO: 读取多维表格字段，增加可视化的索引范围选择
 }

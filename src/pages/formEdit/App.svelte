@@ -6,9 +6,9 @@
 		DocForm,
 		getFormById
 	} from '@/components/settings/settings.svelte';
-	import SheetFormSetting from '@/components/settings/FormSetting/SheetFormSetting.svelte';
-	import BitableFormSetting from '@/components/settings/FormSetting/BitableFormSetting.svelte';
-	import DocFormSetting from '@/components/settings/FormSetting/DocFormSetting.svelte';
+	import SheetFormSetting from '@/components/forms/SheetFormSetting.svelte';
+	import BitableFormSetting from '@/components/forms/BitableFormSetting.svelte';
+	import DocFormSetting from '@/components/forms/DocFormSetting.svelte';
 
 	const searchParams = new URL(window.location.toString()).searchParams;
 	const mode = searchParams.get('mode') as EditMode;

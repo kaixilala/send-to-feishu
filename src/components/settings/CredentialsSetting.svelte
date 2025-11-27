@@ -7,7 +7,7 @@
 	async function handleSave() {
 		try {
 			if (!feishuAppId || !feishuAppSecret || !feishuBaseUrl) {
-				throw new Error('请填写完整的 App ID 、 App Secret 和基础链接');
+				throw new Error('请填写完整的 App ID、App Secret 和基础链接');
 			}
 			await credentials.set(feishuAppId, feishuAppSecret, feishuBaseUrl);
 			const token = await credentials.tokenManager?.getToken();

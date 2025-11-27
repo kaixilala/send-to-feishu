@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { DocForm } from '@/components/settings/settings.svelte';
 	import FormSettingLayout from '@/components/layout/FormSettingLayout.svelte';
 
-	let { form }: { form: DocForm } = $props();
+	let { form }: { form: DocFrommType } = $props();
 	let isComplete = $derived(!!form.folderToken && !!form.name);
 </script>
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getPagePath } from '@/lib/utils';
-	import { allForms } from './settings.svelte';
+	import { allForms } from '@/components/forms/forms.svelte';
 	import { ListPlus } from 'lucide-svelte';
 </script>
 

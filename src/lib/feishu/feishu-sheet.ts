@@ -1,6 +1,6 @@
 // API 参考文档 https://open.feishu.cn/document/server-docs/docs/sheets-v3/data-operation/append-data
 import { FeishuToken } from './feishu-token-manager';
-type AppendDataPayload = Array<Array<string | { text: string; link: string; type: 'url' }>>;
+export type SheetPayload = Array<Array<string | { text: string; link: string; type: 'url' }>>;
 
 export class FeishuSheetManager {
 	constructor(
@@ -38,7 +38,7 @@ export class FeishuSheetManager {
 	 *  向飞书表格中插入行数据
 	 * @param payload - 要插入的数据，二维数组形式表示多行多列
 	 */
-	async insertRowToFeishuSheet(payload: AppendDataPayload) {
+	async insertRowToFeishuSheet(payload: SheetPayload) {
 		const url = `https://open.feishu.cn/open-apis/sheets/v2/spreadsheets/${this.sheetToken}/values_append?insertDataOption=INSERT_ROWS`;
 
 		const headers = {

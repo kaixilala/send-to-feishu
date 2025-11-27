@@ -1,6 +1,11 @@
 // API 参考文档 https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-record/create?appId=cli_a7a5d48eeab81013
 import { FeishuToken } from './feishu-token-manager';
 
+export type DocPayload = {
+	title: string;
+	content: string;
+};
+
 type CreateDocResponse = {
 	document: {
 		document_id: string;
@@ -59,7 +64,9 @@ export class FeishuDocManager {
 	 * @param content 文档内容
 	 * TODO：需要根据内容格式，支持更多的内容块类型，参考文档：https://open.feishu.cn/document/server-docs/docs/docs/docx-v1/document-block/create
 	 */
-	async writeDocContent(title: string, content: string): Promise<void> {
+	async writeDocContent(payload: DocPayload): Promise<void> {
+		const { title, content } = payload;
+
 		const blocks = content.split('\n\n');
 
 		if (blocks.length === 0) {

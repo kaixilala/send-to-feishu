@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { SheetForm } from '@/components/settings/settings.svelte';
 	import FormSettingLayout from '@/components/layout/FormSettingLayout.svelte';
 
-	let { form }: { form: SheetForm } = $props();
+	let { form }: { form: SheetFormType } = $props();
 	let isComplete = $derived(!!form.sheetToken && !!form.sheetId && !!form.name);
 </script>
 

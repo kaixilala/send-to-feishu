@@ -1,11 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-
-	interface FormLike {
-		name: string;
-		save: () => Promise<void>;
-		delete: () => Promise<void>;
-	}
+	import { setForm, deleteForm } from '@/components/forms/forms.svelte';
 
 	let {
 		form,
@@ -13,7 +8,7 @@
 		title,
 		children
 	}: {
-		form: FormLike;
+		form: FormType;
 		isComplete: boolean;
 		title: Snippet;
 		children: Snippet;
@@ -27,7 +22,7 @@
 			return;
 		}
 		try {
-			await form.save();
+			await setForm(form);
 			alert('保存成功');
 			return;
 		} catch (error) {
@@ -43,11 +38,11 @@
 		}
 
 		try {
-			await form.delete();
+			await deleteForm(form);
 			alert('删除成功');
 		} catch (error) {
 			console.error(error);
-			alert('删除失败: ' + (error instanceof Error ? error.message : '未知错误'));
+			alert('删除失败：' + (error instanceof Error ? error.message : '未知错误'));
 		}
 	}
 </script>
