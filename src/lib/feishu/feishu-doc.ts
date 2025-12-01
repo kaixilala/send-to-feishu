@@ -22,12 +22,54 @@ type Block = {
 		merge_info?: unknown;
 		[key: string]: unknown;
 	};
+	image?: {
+		width?: number;
+		height?: number;
+		align?: number;
+		token?: string;
+		caption?: {
+			content?: string;
+		};
+		[key: string]: unknown;
+	};
 	[key: string]: unknown;
+};
+
+type BlockIdToImageUrl = {
+	block_id: string;
+	image_url: string;
+};
+
+type BlockIdRelation = {
+	block_id: string;
+	temporary_block_id: string;
+};
+
+type CreateDescendantResponse = {
+	block_id_relations?: BlockIdRelation[];
 };
 
 type ParseDocResult = {
 	first_level_block_ids: string[];
 	blocks: Block[];
+	block_id_to_image_urls?: BlockIdToImageUrl[];
+};
+
+type DownloadedImageBinary = {
+	buffer: ArrayBuffer;
+	fileName: string;
+	contentType: string;
+};
+
+type ImageReplacementPayload = {
+	blockId: string;
+	fileToken: string;
+	width?: number;
+	height?: number;
+	align?: number;
+	caption?: {
+		content?: string;
+	};
 };
 
 export class FeishuDocManager {
@@ -132,7 +174,7 @@ export class FeishuDocManager {
 		documentId: string,
 		childrenIds: string[],
 		descendants: Block[]
-	): Promise<void> {
+	): Promise<BlockIdRelation[]> {
 		const url = `https://open.feishu.cn/open-apis/docx/v1/documents/${documentId}/blocks/${documentId}/descendant`;
 		const headers = {
 			Authorization: `Bearer ${await this.tokenManager.getToken()}`,
@@ -154,11 +196,234 @@ export class FeishuDocManager {
 			throw new Error(`写入文档分片失败，错误消息：${await res.text()}`);
 		}
 
-		const resData: FeishuApiResponse = await res.json();
+		const resData: FeishuApiResponse<CreateDescendantResponse> = await res.json();
 
 		if (resData.code !== 0) {
 			throw new Error(`飞书写入文档接口报错：${resData.msg}`);
 		}
+
+		return resData.data?.block_id_relations ?? [];
+	}
+
+	private async fetchImageBinary(imageUrl: string): Promise<DownloadedImageBinary> {
+		if (imageUrl.startsWith('data:')) {
+			const match = imageUrl.match(/^data:(.*?)(;base64)?,(.*)$/);
+			if (!match) {
+				throw new Error('图片 data URL 格式不正确');
+			}
+			const mimeType = match[1] || 'application/octet-stream';
+			const isBase64 = Boolean(match[2]);
+			const dataPart = match[3] || '';
+			let buffer: ArrayBuffer;
+			if (isBase64) {
+				const binaryString = this.decodeBase64(dataPart);
+				const bytes = new Uint8Array(binaryString.length);
+				for (let i = 0; i < binaryString.length; i++) {
+					bytes[i] = binaryString.charCodeAt(i);
+				}
+				buffer = bytes.buffer;
+			} else {
+				const decoded = decodeURIComponent(dataPart);
+				const encoder = new TextEncoder();
+				buffer = encoder.encode(decoded).buffer;
+			}
+			return {
+				buffer,
+				contentType: mimeType,
+				fileName: `image_${Date.now()}.${this.getExtensionFromContentType(mimeType)}`
+			};
+		}
+
+		const response = await fetch(imageUrl);
+		if (!response.ok) {
+			throw new Error(`下载图片失败：${imageUrl}，${response.status} ${response.statusText}`);
+		}
+		const contentType = response.headers.get('Content-Type') ?? 'application/octet-stream';
+		const buffer = await response.arrayBuffer();
+		return {
+			buffer,
+			contentType,
+			fileName: this.inferFileName(imageUrl, contentType)
+		};
+	}
+
+	private decodeBase64(data: string): string {
+		if (typeof atob === 'function') {
+			return atob(data);
+		}
+		if (typeof Buffer !== 'undefined') {
+			return Buffer.from(data, 'base64').toString('binary');
+		}
+		throw new Error('当前运行环境不支持 base64 解码');
+	}
+
+	private getExtensionFromContentType(contentType?: string): string {
+		if (!contentType) {
+			return 'bin';
+		}
+		const normalized = contentType.split(';')[0]?.trim().toLowerCase() ?? '';
+		const mapping: Record<string, string> = {
+			'image/jpeg': 'jpg',
+			'image/jpg': 'jpg',
+			'image/png': 'png',
+			'image/gif': 'gif',
+			'image/webp': 'webp',
+			'image/svg+xml': 'svg',
+			'image/avif': 'avif',
+			'image/heic': 'heic',
+			'image/heif': 'heif'
+		};
+		return mapping[normalized] ?? normalized.split('/').pop() ?? 'bin';
+	}
+
+	private inferFileName(imageUrl: string, contentType?: string): string {
+		try {
+			const parsedUrl = new URL(imageUrl);
+			const pathname = parsedUrl.pathname.replace(/\/+$/, '');
+			let baseName = decodeURIComponent(pathname.substring(pathname.lastIndexOf('/') + 1));
+			baseName = baseName.split('?')[0];
+			if (baseName && baseName.includes('.')) {
+				return baseName;
+			}
+			const extension = this.getExtensionFromContentType(contentType);
+			return `${baseName || 'image'}.${extension}`;
+		} catch (error) {
+			console.warn('解析图片文件名失败，将使用默认名称：', error);
+			return `image.${this.getExtensionFromContentType(contentType)}`;
+		}
+	}
+
+	private async uploadImageToBlock(
+		imageBlockId: string,
+		imageBinary: DownloadedImageBinary
+	): Promise<string> {
+		const url = 'https://open.feishu.cn/open-apis/drive/v1/medias/upload_all';
+		const headers = {
+			Authorization: `Bearer ${await this.tokenManager.getToken()}`
+		};
+		const formData = new FormData();
+		formData.append('file_name', imageBinary.fileName);
+		formData.append('parent_type', 'docx_image');
+		formData.append('parent_node', imageBlockId);
+		formData.append('size', imageBinary.buffer.byteLength.toString());
+		const blob = new Blob([imageBinary.buffer], { type: imageBinary.contentType });
+		formData.append('file', blob, imageBinary.fileName);
+
+		const res = await fetch(url, {
+			method: 'POST',
+			headers,
+			body: formData
+		});
+
+		if (!res.ok) {
+			throw new Error(`上传图片素材失败，错误消息：${await res.text()}`);
+		}
+
+		const resData: FeishuApiResponse<{ file_token: string }> = await res.json();
+
+		if (resData.code !== 0 || !resData.data?.file_token) {
+			throw new Error(`飞书上传图片素材接口报错：${resData.msg}`);
+		}
+
+		return resData.data.file_token;
+	}
+
+	private async replaceDocumentImages(
+		documentId: string,
+		replacements: ImageReplacementPayload[]
+	): Promise<void> {
+		if (replacements.length === 0) {
+			return;
+		}
+		const url = `https://open.feishu.cn/open-apis/docx/v1/documents/${documentId}/blocks/batch_update`;
+		const headers = {
+			Authorization: `Bearer ${await this.tokenManager.getToken()}`,
+			'Content-Type': 'application/json; charset=utf-8'
+		};
+		const BATCH_LIMIT = 200;
+		for (let i = 0; i < replacements.length; i += BATCH_LIMIT) {
+			const batch = replacements.slice(i, i + BATCH_LIMIT);
+			const body = JSON.stringify({
+				requests: batch.map((item) => {
+					const replace_image: Record<string, unknown> = {
+						token: item.fileToken
+					};
+					if (typeof item.width === 'number') {
+						replace_image.width = item.width;
+					}
+					if (typeof item.height === 'number') {
+						replace_image.height = item.height;
+					}
+					if (typeof item.align === 'number') {
+						replace_image.align = item.align;
+					}
+					if (item.caption?.content) {
+						replace_image.caption = { content: item.caption.content };
+					}
+					return {
+						block_id: item.blockId,
+						replace_image
+					};
+				})
+			});
+
+			const res = await fetch(url, {
+				method: 'PATCH',
+				headers,
+				body
+			});
+
+			if (!res.ok) {
+				throw new Error(`批量替换图片失败，错误消息：${await res.text()}`);
+			}
+
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code !== 0) {
+				throw new Error(`飞书批量更新块接口报错：${resData.msg}`);
+			}
+		}
+	}
+
+	private async handleImageBlocks(
+		documentId: string,
+		imageBlocks: Block[],
+		imageUrlMap: Map<string, string>,
+		blockIdMap: Map<string, string>
+	): Promise<void> {
+		if (imageBlocks.length === 0 || imageUrlMap.size === 0) {
+			return;
+		}
+		const pending = imageBlocks
+			.map((block) => {
+				const imageUrl = imageUrlMap.get(block.block_id);
+				if (!imageUrl) {
+					console.warn(`未找到图片 URL，跳过 block ${block.block_id}`);
+					return null;
+				}
+				return { block, imageUrl };
+			})
+			.filter((item): item is { block: Block; imageUrl: string } => Boolean(item));
+		if (pending.length === 0) {
+			return;
+		}
+
+		const replacements: ImageReplacementPayload[] = [];
+		for (const { block, imageUrl } of pending) {
+			const actualBlockId = blockIdMap.get(block.block_id) ?? block.block_id;
+			const imageBinary = await this.fetchImageBinary(imageUrl);
+			const fileToken = await this.uploadImageToBlock(actualBlockId, imageBinary);
+			replacements.push({
+				blockId: actualBlockId,
+				fileToken,
+				width: typeof block.image?.width === 'number' ? block.image?.width : undefined,
+				height: typeof block.image?.height === 'number' ? block.image?.height : undefined,
+				align: typeof block.image?.align === 'number' ? block.image?.align : undefined,
+				caption: block.image?.caption
+			});
+		}
+
+		await this.replaceDocumentImages(documentId, replacements);
 	}
 
 	/**
@@ -174,6 +439,18 @@ export class FeishuDocManager {
 
 		let first_level_block_ids: string[] = [];
 		let blocks: Block[] = [];
+		const imageUrlMap = new Map<string, string>();
+
+		const appendImageMappings = (mappings?: BlockIdToImageUrl[]): void => {
+			if (!mappings) {
+				return;
+			}
+			for (const mapping of mappings) {
+				if (mapping.block_id && mapping.image_url) {
+					imageUrlMap.set(mapping.block_id, mapping.image_url);
+				}
+			}
+		};
 
 		if (metadata) {
 			const metadataForDoc = { ...metadata };
@@ -187,6 +464,7 @@ export class FeishuDocManager {
 			}
 			const markdownBody = payload.content.trim();
 			const bodyResult = await FeishuDocManager.parseDoc(markdownBody);
+			appendImageMappings(bodyResult.block_id_to_image_urls);
 			const metadataContent = stringify(metadataForDoc).trim();
 
 			const createSpacerBlock = (blockId: string): Block => ({
@@ -239,20 +517,31 @@ export class FeishuDocManager {
 			const result = await FeishuDocManager.parseDoc(content);
 			first_level_block_ids = result.first_level_block_ids;
 			blocks = result.blocks;
+			appendImageMappings(result.block_id_to_image_urls);
 		}
 
 		if (blocks.length === 0) {
 			throw new Error('没有内容可以写入文档');
 		}
 
+		const imageBlocks = blocks.filter((block) => block.block_type === 27);
+
+		const tempBlockIdToRealBlockId = new Map<string, string>();
+		const recordBlockRelations = (relations: BlockIdRelation[]): void => {
+			if (!relations || relations.length === 0) {
+				return;
+			}
+			for (const relation of relations) {
+				if (relation.temporary_block_id && relation.block_id) {
+					tempBlockIdToRealBlockId.set(relation.temporary_block_id, relation.block_id);
+				}
+			}
+		};
+
 		// 预处理：构建 Map 并清理表格块
 		const blockMap = new Map<string, Block>();
 
 		for (const block of blocks) {
-			// 过滤图片块 (block_type === 27)
-			if (block.block_type === 27) {
-				continue;
-			}
 			if (block.block_type === 31 && block.table && block.table.merge_info) {
 				// 31 is Table
 				delete block.table.merge_info;
@@ -260,8 +549,7 @@ export class FeishuDocManager {
 			blockMap.set(block.block_id, block);
 		}
 
-		// 修复：清理 children 中引用的 ID，确保所有引用的子块都存在于 blockMap 中
-		// 如果子块（如图片）被过滤掉，父块的 children 中仍保留该 ID，会导致接口报错
+		// 清理 children 中引用的 ID，确保所有引用的子块都存在于 blockMap 中
 		for (const block of blockMap.values()) {
 			if (block.children && block.children.length > 0) {
 				block.children = block.children.filter((childId) => blockMap.has(childId));
@@ -286,7 +574,12 @@ export class FeishuDocManager {
 			// 如果当前批次加上新的树超过限制，先发送当前批次
 			if (currentBatchBlocks.length + tree.length > BATCH_LIMIT) {
 				if (currentBatchBlocks.length > 0) {
-					await this.sendBatch(documentId, currentBatchFirstLevelIds, currentBatchBlocks);
+					const relations = await this.sendBatch(
+						documentId,
+						currentBatchFirstLevelIds,
+						currentBatchBlocks
+					);
+					recordBlockRelations(relations);
 					currentBatchFirstLevelIds = [];
 					currentBatchBlocks = [];
 				}
@@ -305,8 +598,15 @@ export class FeishuDocManager {
 
 		// 发送剩余的批次
 		if (currentBatchBlocks.length > 0) {
-			await this.sendBatch(documentId, currentBatchFirstLevelIds, currentBatchBlocks);
+			const relations = await this.sendBatch(
+				documentId,
+				currentBatchFirstLevelIds,
+				currentBatchBlocks
+			);
+			recordBlockRelations(relations);
 		}
+
+		await this.handleImageBlocks(documentId, imageBlocks, imageUrlMap, tempBlockIdToRealBlockId);
 
 		return documentId;
 	}
