@@ -59,6 +59,8 @@ type DownloadedImageBinary = {
 	buffer: ArrayBuffer;
 	fileName: string;
 	contentType: string;
+	width?: number;
+	height?: number;
 };
 
 type ImageReplacementPayload = {
@@ -227,10 +229,13 @@ export class FeishuDocManager {
 				const encoder = new TextEncoder();
 				buffer = encoder.encode(decoded).buffer;
 			}
+			const dimensions = await this.getImageDimensionsFromBuffer(buffer, mimeType);
 			return {
 				buffer,
 				contentType: mimeType,
-				fileName: `image_${Date.now()}.${this.getExtensionFromContentType(mimeType)}`
+				fileName: `image_${Date.now()}.${this.getExtensionFromContentType(mimeType)}`,
+				width: dimensions?.width,
+				height: dimensions?.height
 			};
 		}
 
@@ -240,10 +245,13 @@ export class FeishuDocManager {
 		}
 		const contentType = response.headers.get('Content-Type') ?? 'application/octet-stream';
 		const buffer = await response.arrayBuffer();
+		const dimensions = await this.getImageDimensionsFromBuffer(buffer, contentType);
 		return {
 			buffer,
 			contentType,
-			fileName: this.inferFileName(imageUrl, contentType)
+			fileName: this.inferFileName(imageUrl, contentType),
+			width: dimensions?.width,
+			height: dimensions?.height
 		};
 	}
 
@@ -290,6 +298,52 @@ export class FeishuDocManager {
 		} catch (error) {
 			console.warn('解析图片文件名失败，将使用默认名称：', error);
 			return `image.${this.getExtensionFromContentType(contentType)}`;
+		}
+	}
+
+	private async getImageDimensionsFromBuffer(
+		buffer: ArrayBuffer,
+		contentType?: string
+	): Promise<{ width: number; height: number } | null> {
+		try {
+			const blob = new Blob([buffer], {
+				type: contentType || 'application/octet-stream'
+			});
+			if (typeof createImageBitmap === 'function') {
+				try {
+					const bitmap = await createImageBitmap(blob);
+					const dimensions = { width: bitmap.width, height: bitmap.height };
+					if (typeof bitmap.close === 'function') {
+						bitmap.close();
+					}
+					return dimensions;
+				} catch (error) {
+					console.warn('createImageBitmap 获取图片尺寸失败，将尝试使用 Image：', error);
+				}
+			}
+
+			if (typeof Image !== 'undefined' && typeof URL !== 'undefined' && URL.createObjectURL) {
+				return await new Promise((resolve, reject) => {
+					const url = URL.createObjectURL(blob);
+					const img = new Image();
+					img.onload = () => {
+						const width = img.naturalWidth || img.width;
+						const height = img.naturalHeight || img.height;
+						URL.revokeObjectURL(url);
+						resolve({ width, height });
+					};
+					img.onerror = () => {
+						URL.revokeObjectURL(url);
+						reject(new Error('图片加载失败'));
+					};
+					img.src = url;
+				});
+			}
+			console.warn('当前运行环境不支持解析图片尺寸，将回退为默认尺寸');
+			return null;
+		} catch (error) {
+			console.warn('解析图片尺寸失败，将回退为默认尺寸：', error);
+			return null;
 		}
 	}
 
@@ -413,11 +467,17 @@ export class FeishuDocManager {
 			const actualBlockId = blockIdMap.get(block.block_id) ?? block.block_id;
 			const imageBinary = await this.fetchImageBinary(imageUrl);
 			const fileToken = await this.uploadImageToBlock(actualBlockId, imageBinary);
+			const widthFromSource = imageBinary.width;
+			const heightFromSource = imageBinary.height;
+			const widthFromBlock =
+				typeof block.image?.width === 'number' ? block.image?.width : undefined;
+			const heightFromBlock =
+				typeof block.image?.height === 'number' ? block.image?.height : undefined;
 			replacements.push({
 				blockId: actualBlockId,
 				fileToken,
-				width: typeof block.image?.width === 'number' ? block.image?.width : undefined,
-				height: typeof block.image?.height === 'number' ? block.image?.height : undefined,
+				width: widthFromSource ?? widthFromBlock,
+				height: heightFromSource ?? heightFromBlock,
 				align: typeof block.image?.align === 'number' ? block.image?.align : undefined,
 				caption: block.image?.caption
 			});
