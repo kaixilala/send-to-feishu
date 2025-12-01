@@ -26,7 +26,7 @@ export async function setForm(form: FormType) {
 		// 推入全局数组
 		//
 
-		if (form.formType == '飞书表格') {
+		if (form.formType == '电子表格') {
 			if (form.rangeIndex.startIndex === '' || form.rangeIndex.endIndex === '') {
 				form.rangeIndex.startIndex = 'A';
 				form.rangeIndex.endIndex = 'Z';

@@ -21,10 +21,10 @@
 		>
 		<a
 			href={getPagePath('formEdit', {
-				type: '飞书表格',
+				type: '电子表格',
 				mode: 'create'
 			})}
-			class="badge badge-sm">飞书表格配置</a
+			class="badge badge-sm">电子表格配置</a
 		>
 	</p>
 

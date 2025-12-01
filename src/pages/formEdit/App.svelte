@@ -12,9 +12,9 @@
 	let form = $derived(formId ? getForm(formId) : null);
 	let createForm: FormType = $state(
 		(() => {
-			if (formType === '飞书表格') {
+			if (formType === '电子表格') {
 				return {
-					formType: '飞书表格',
+					formType: '电子表格',
 					fields: ['title', 'url'],
 					id: crypto.randomUUID(),
 					name: '',
@@ -62,7 +62,7 @@
 
 <Layout>
 	{#if mode == 'create'}
-		{#if formType == '飞书表格'}
+		{#if formType == '电子表格'}
 			<SheetFormSetting form={createForm as SheetFormType} />
 		{:else if formType == '多维表格'}
 			<BitableFormSetting form={createForm as BitableFormType} />
@@ -70,7 +70,7 @@
 			<DocFormSetting form={createForm as DocFromType} />
 		{/if}
 	{:else if mode == 'edit' && form}
-		{#if form.formType == '飞书表格'}
+		{#if form.formType == '电子表格'}
 			<SheetFormSetting {form} />
 		{:else if form.formType == '多维表格'}
 			<BitableFormSetting {form} />

@@ -82,7 +82,7 @@ declare global {
 		/**
 		 * 表单类型名称
 		 */
-		formType: '飞书表格';
+		formType: '电子表格';
 		/**
 		 * 电子表格的 token。
 		 */

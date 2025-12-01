@@ -10,7 +10,7 @@
 
 <FormSettingLayout {form} {isComplete}>
 	{#snippet title()}
-		<span class="mx-1 badge badge-sm badge-neutral">飞书表格</span>
+		<span class="mx-1 badge badge-sm badge-neutral">电子表格</span>
 	{/snippet}
 	<p class="label text-wrap">仅保存文章链接，如需保存文章内容，请创建</p>
 	<p>

@@ -25,7 +25,7 @@ export class FeishuSheetManager {
 	) {}
 
 	/**
-	 *  获取飞书表格的特定行的数据，默认读取第一行
+	 *  获取电子表格的特定行的数据，默认读取第一行
 	 * @param rowIndex
 	 * @returns
 	 */
@@ -53,7 +53,7 @@ export class FeishuSheetManager {
 		});
 
 		if (!res.ok) {
-			throw new Error(`请求飞书表格接口失败，${await res.text()}`);
+			throw new Error(`请求电子表格接口失败，${await res.text()}`);
 		}
 
 		// TODO: 目前仅支持表头是字符串或数字的情况，后续可以考虑支持更多类型
@@ -66,15 +66,15 @@ export class FeishuSheetManager {
 		}> = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书表格接口报错：${resData.msg}`);
+			throw new Error(`电子表格接口报错：${resData.msg}`);
 		}
 		// 返回特定行的数据
 		return resData.data.valueRange.values[0];
 	}
 
 	/**
-	 * 根据飞书表格的 token 获取其下所有工作表的 id 和标题
-	 * @param sheetToken 飞书表格的 token
+	 * 根据电子表格的 token 获取其下所有工作表的 id 和标题
+	 * @param sheetToken 电子表格的 token
 	 * @returns
 	 */
 	static async getSheets(sheetToken: string) {
@@ -95,7 +95,7 @@ export class FeishuSheetManager {
 		});
 
 		if (!res.ok) {
-			throw new Error(`请求飞书表格接口失败，${await res.text()}`);
+			throw new Error(`请求电子表格接口失败，${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse<{
@@ -109,7 +109,7 @@ export class FeishuSheetManager {
 	}
 
 	/**
-	 *  从输入的飞书表格链接中解析出 Sheet Token 和 Sheet ID
+	 *  从输入的电子表格链接中解析出 Sheet Token 和 Sheet ID
 	 * @returns
 	 */
 	static parseSheetUrl(sheetUrl: string) {
@@ -179,7 +179,7 @@ export class FeishuSheetManager {
 	}
 
 	/**
-	 *  向飞书表格中插入行数据
+	 *  向电子表格中插入行数据
 	 * @param payload - 要插入的数据，二维数组形式表示多行多列
 	 */
 	async insertRowToFeishuSheet(payload: SheetPayload) {
@@ -200,13 +200,13 @@ export class FeishuSheetManager {
 		});
 
 		if (!res.ok) {
-			throw new Error(`请求飞书表格接口失败，${await res.text()}`);
+			throw new Error(`请求电子表格接口失败，${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书表格接口报错：${resData.msg}`);
+			throw new Error(`电子表格接口报错：${resData.msg}`);
 		}
 	}
 }

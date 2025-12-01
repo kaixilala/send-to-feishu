@@ -17,7 +17,7 @@
 		tabindex="-1"
 		class="dropdown-content menu z-1 w-32 gap-2 rounded-box bg-base-100 p-2 shadow-sm"
 	>
-		{@render createNewForm('飞书表格')}
+		{@render createNewForm('电子表格')}
 		{@render createNewForm('多维表格')}
 		{@render createNewForm('飞书文档')}
 	</ul>

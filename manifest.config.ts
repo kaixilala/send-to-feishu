@@ -4,6 +4,7 @@ import pkg from './package.json';
 export default defineManifest({
 	manifest_version: 3,
 	name: '保存到飞书',
+	description: '一键将网页内容保存到飞书文档、多维表格或电子表格（飞书表格）中',
 	version: pkg.version,
 	icons: {
 		16: 'public/icons/16.png',
@@ -19,7 +20,7 @@ export default defineManifest({
 			128: 'public/icons/128.png'
 		}
 	},
-	host_permissions: ['<all_urls>', 'https://open.feishu.cn/*'],
+	host_permissions: ['https://open.feishu.cn/*'],
 	background: {
 		service_worker: 'src/background/main.ts',
 		type: 'module'

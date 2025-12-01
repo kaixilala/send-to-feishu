@@ -19,7 +19,7 @@ async function sendToFeishuSheet(formId: string, payload: SheetPayload) {
 		throw new Error('表单配置未找到');
 	}
 
-	if (form.formType !== '飞书表格') {
+	if (form.formType !== '电子表格') {
 		throw new Error('表单配置类型错误');
 	}
 
@@ -134,7 +134,7 @@ export async function sendToFeishu(formId: string): Promise<string> {
 	const articleData = await extractWebArticle(html, url);
 
 	switch (form.formType) {
-		case '飞书表格': {
+		case '电子表格': {
 			const payload: SheetPayload = FeishuSheetManager.getPayload(form.fields, articleData);
 			console.log('Sheet payload:', payload);
 			return await sendToFeishuSheet(formId, payload);
@@ -183,7 +183,7 @@ export async function sendToFeishu(formId: string): Promise<string> {
 
 					return await sendToFeishuBitable(linkForm.id, payload);
 				}
-				case '飞书表格': {
+				case '电子表格': {
 					const payload: SheetPayload = [
 						[
 							articleData.title,
