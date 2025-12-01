@@ -144,7 +144,7 @@ declare global {
 		 */
 		formType: '飞书文档';
 		/**
-		 * 指定飞书文件夹的 token。
+		 * 指定飞书文件夹的 token, 不传表示上传到根目录。
 		 */
 		folderToken: string;
 	};

@@ -2,7 +2,7 @@
 	import FormSettingLayout from '@/components/layout/FormSettingLayout.svelte';
 	import { getPagePath } from '@/lib/utils';
 	let { form }: { form: DocFromType } = $props();
-	let isComplete = $derived(!!form.folderToken && !!form.name);
+	let isComplete = $derived(!!form.name);
 </script>
 
 <FormSettingLayout {form} {isComplete}>
@@ -42,11 +42,11 @@
 	<!-- Folder Token -->
 	<label for="folderToken" class="label">Folder Token</label>
 	<input
-		required
 		id="folderToken"
 		type="text"
 		class="input"
 		placeholder="Folder Token"
 		bind:value={form.folderToken}
 	/>
+	<p class="label">代表新建文档的文件夹，不填将在根目录新建文档。</p>
 </FormSettingLayout>

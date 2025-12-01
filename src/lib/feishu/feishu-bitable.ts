@@ -47,6 +47,11 @@ export class FeishuBitableManager {
 	 * @returns
 	 */
 	static parseBitableUrl(bitableUrl: string) {
+		const baseUrl = credentials.feishuBaseUrl + 'base/';
+		const wikiUrl = credentials.feishuBaseUrl + 'wiki/';
+		if (!bitableUrl.startsWith(baseUrl) && !bitableUrl.startsWith(wikiUrl)) {
+			throw new Error('多维表格链接不属于当前飞书域名，请检查链接是否正确');
+		}
 		const url = new URL(bitableUrl);
 		const pathList = url.pathname.split('/');
 		const appToken = pathList[pathList.length - 1];

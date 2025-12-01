@@ -105,6 +105,24 @@ export class FeishuDocManager {
 		private folderToken: string
 	) {}
 
+	/**
+	 *  从输入的飞书文件夹链接中解析出 folderToken
+	 */
+	static parseFolderUrl(url: string): string | undefined {
+		const baseUrl = credentials.feishuBaseUrl + 'drive/folder/';
+		if (!url.startsWith(baseUrl)) {
+			throw new Error('飞书文件夹链接格式不正确');
+		}
+
+		const folderToken = url.substring(baseUrl.length).split('?')[0].trim();
+
+		if (!folderToken) {
+			throw new Error('无法从链接中解析出文件夹 token，请检查链接是否正确');
+		}
+
+		return folderToken;
+	}
+
 	static async parseDoc(content: string): Promise<ParseDocResult> {
 		if (!credentials.tokenManager) {
 			throw new Error('未找到有效的凭据');

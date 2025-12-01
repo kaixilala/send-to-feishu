@@ -113,6 +113,12 @@ export class FeishuSheetManager {
 	 * @returns
 	 */
 	static parseSheetUrl(sheetUrl: string) {
+		const sheetsUrl = credentials.feishuBaseUrl + 'sheets/';
+		const wikiUrl = credentials.feishuBaseUrl + 'wiki/';
+		if (!sheetUrl.startsWith(sheetsUrl) && !sheetUrl.startsWith(wikiUrl)) {
+			throw new Error('多维表格链接不属于当前飞书域名，请检查链接是否正确');
+		}
+
 		const url = new URL(sheetUrl);
 		const pathList = url.pathname.split('/');
 		const sheetToken = pathList[pathList.length - 1];
