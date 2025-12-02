@@ -4,25 +4,42 @@ import { credentials } from '@/components/settings/settings.svelte';
 import { stringify } from 'yaml';
 import { stringifyDate } from '../utils';
 
+/**
+ * 文档内容的负载类型。
+ */
 export type DocPayload = {
+	/** 文档标题 */
 	title: string;
+	/** 文档内容，通常是 Markdown 格式 */
 	content: string;
 };
 
+/**
+ * 创建文档接口的响应类型。
+ */
 type CreateDocResponse = {
 	document: {
+		/** 新创建文档的 ID */
 		document_id: string;
 	};
 };
 
+/**
+ * 飞书文档块的通用结构。
+ */
 type Block = {
+	/** 块的唯一标识符 */
 	block_id: string;
+	/** 子块的 ID 列表 */
 	children?: string[];
+	/** 块的类型，参照飞书开放平台文档 */
 	block_type: number;
+	/** 表格块特有的属性 */
 	table?: {
 		merge_info?: unknown;
 		[key: string]: unknown;
 	};
+	/** 图片块特有的属性 */
 	image?: {
 		width?: number;
 		height?: number;
@@ -36,45 +53,85 @@ type Block = {
 	[key: string]: unknown;
 };
 
+/**
+ * 块 ID 到图片 URL 的映射。
+ */
 type BlockIdToImageUrl = {
+	/** 块的 ID */
 	block_id: string;
+	/** 图片的 URL */
 	image_url: string;
 };
 
+/**
+ * 块 ID 之间的关系，用于临时 ID 到真实 ID 的映射。
+ */
 type BlockIdRelation = {
+	/** 真实的块 ID */
 	block_id: string;
+	/** 临时的块 ID */
 	temporary_block_id: string;
 };
 
+/**
+ * 创建子孙块接口的响应类型。
+ */
 type CreateDescendantResponse = {
+	/** 块 ID 关系列表 */
 	block_id_relations?: BlockIdRelation[];
 };
 
+/**
+ * 解析文档内容的返回结果。
+ */
 type ParseDocResult = {
+	/** 第一级块的 ID 列表 */
 	first_level_block_ids: string[];
+	/** 所有解析出的块 */
 	blocks: Block[];
+	/** 块 ID 到图片 URL 的映射列表 */
 	block_id_to_image_urls?: BlockIdToImageUrl[];
 };
 
+/**
+ * 下载的图片二进制数据结构。
+ */
 type DownloadedImageBinary = {
+	/** 图片的 ArrayBuffer 数据 */
 	buffer: ArrayBuffer;
+	/** 图片的文件名 */
 	fileName: string;
+	/** 图片的 Content-Type */
 	contentType: string;
+	/** 图片宽度 (可选) */
 	width?: number;
+	/** 图片高度 (可选) */
 	height?: number;
 };
 
+/**
+ * 图片替换的负载信息。
+ */
 type ImageReplacementPayload = {
+	/** 需要替换的图片块 ID */
 	blockId: string;
+	/** 飞书文件 token，指向已上传的图片 */
 	fileToken: string;
+	/** 图片宽度 (可选) */
 	width?: number;
+	/** 图片高度 (可选) */
 	height?: number;
+	/** 图片对齐方式 (可选) */
 	align?: number;
+	/** 图片标题 (可选) */
 	caption?: {
 		content?: string;
 	};
 };
 
+/**
+ * 图片处理过程中发生的错误。
+ */
 class ImageProcessingError extends Error {
 	constructor(
 		message: string,
@@ -87,12 +144,22 @@ class ImageProcessingError extends Error {
 	}
 }
 
+/**
+ * 判断给定的错误是否为 ImageProcessingError 类型。
+ * @param error - 待检查的错误对象。
+ * @returns 如果是 ImageProcessingError 类型，则返回 true，否则返回 false。
+ */
 const isImageProcessingError = (error: unknown): error is ImageProcessingError =>
 	error instanceof ImageProcessingError;
 
 const IMAGE_UPLOAD_CONCURRENCY = 4;
 const IMAGE_REPLACE_CONCURRENCY = 4;
 
+/**
+ * 创建一个并发限制器，用于控制并发执行的 Promise 数量。
+ * @param concurrency - 最大并发数量。
+ * @returns 一个函数，接受一个返回 Promise 的函数作为参数，并将其加入并发队列执行。
+ */
 const pLimit = (concurrency: number) => {
 	const queue: (() => Promise<void>)[] = [];
 	let active = 0;
@@ -128,6 +195,9 @@ const pLimit = (concurrency: number) => {
 	};
 };
 
+/**
+ * 飞书文档管理器，负责飞书文档的创建、内容写入、图片上传和替换等操作。
+ */
 export class FeishuDocManager {
 	constructor(
 		/**
@@ -142,6 +212,8 @@ export class FeishuDocManager {
 
 	/**
 	 *  从输入的飞书文件夹链接中解析出 folderToken
+	 * @param url - 飞书文件夹的完整 URL。
+	 * @returns 解析出的 folderToken，如果链接格式不正确则抛出错误。
 	 */
 	static parseFolderUrl(url: string): string | undefined {
 		const baseUrl = credentials.feishuBaseUrl + 'drive/folder/';
@@ -158,6 +230,12 @@ export class FeishuDocManager {
 		return folderToken;
 	}
 
+	/**
+	 * 将 Markdown 内容解析为飞书文档块结构。
+	 * @param content - Markdown 格式的文档内容。
+	 * @returns 解析后的文档块结构。
+	 * @throws 如果没有有效的凭据或请求飞书接口失败。
+	 */
 	static async parseDoc(content: string): Promise<ParseDocResult> {
 		if (!credentials.tokenManager) {
 			throw new Error('未找到有效的凭据');
@@ -194,9 +272,11 @@ export class FeishuDocManager {
 		return resData.data;
 	}
 
-	/*
-	 * 在指定文件夹创建飞书文档
-	 * @param {string} docTitle 文档标题
+	/**
+	 * 在指定文件夹创建飞书文档。
+	 * @param docTitle - 文档标题。
+	 * @returns 新创建文档的 ID。
+	 * @throws 如果请求飞书创建文档接口失败。
 	 */
 	private async createDoc(docTitle: string): Promise<string> {
 		const url = `https://open.feishu.cn/open-apis/docx/v1/documents`;
@@ -228,6 +308,12 @@ export class FeishuDocManager {
 		return resData.data.document.document_id;
 	}
 
+	/**
+	 * 递归收集一个块的所有子孙块。
+	 * @param rootId - 根块的 ID。
+	 * @param blockMap - 包含所有块的 Map 结构。
+	 * @returns 包含根块及其所有子孙块的数组。
+	 */
 	private collectBlockTree(rootId: string, blockMap: Map<string, Block>): Block[] {
 		const result: Block[] = [];
 		const queue = [rootId];
@@ -244,6 +330,14 @@ export class FeishuDocManager {
 		return result;
 	}
 
+	/**
+	 * 发送批量创建子孙块的请求。
+	 * @param documentId - 文档 ID。
+	 * @param childrenIds - 待创建的第一级子块 ID 列表。
+	 * @param descendants - 所有待创建的子孙块。
+	 * @returns 块 ID 关系列表，用于映射临时 ID 到真实 ID。
+	 * @throws 如果请求飞书接口失败。
+	 */
 	private async sendBatch(
 		documentId: string,
 		childrenIds: string[],
@@ -279,6 +373,13 @@ export class FeishuDocManager {
 		return resData.data?.block_id_relations ?? [];
 	}
 
+	/**
+	 * 获取图片的二进制数据。
+	 * 支持 data URL 和普通 URL。
+	 * @param imageUrl - 图片的 URL 或 data URL。
+	 * @returns 包含图片二进制数据、文件名、Content-Type 和尺寸的对象。
+	 * @throws ImageProcessingError 如果图片 URL 格式不正确或下载失败。
+	 */
 	private async fetchImageBinary(imageUrl: string): Promise<DownloadedImageBinary> {
 		if (imageUrl.startsWith('data:')) {
 			const match = imageUrl.match(/^data:(.*?)(;base64)?,(.*)$/);
@@ -331,6 +432,12 @@ export class FeishuDocManager {
 		};
 	}
 
+	/**
+	 * 解码 Base64 字符串。
+	 * @param data - Base64 编码的字符串。
+	 * @returns 解码后的二进制字符串。
+	 * @throws ImageProcessingError 如果当前运行环境不支持 Base64 解码。
+	 */
 	private decodeBase64(data: string): string {
 		if (typeof atob === 'function') {
 			return atob(data);
@@ -341,6 +448,11 @@ export class FeishuDocManager {
 		throw new ImageProcessingError('当前运行环境不支持 base64 解码');
 	}
 
+	/**
+	 * 根据 Content-Type 获取文件扩展名。
+	 * @param contentType - 媒体类型字符串。
+	 * @returns 对应的文件扩展名，默认为 'bin'。
+	 */
 	private getExtensionFromContentType(contentType?: string): string {
 		if (!contentType) {
 			return 'bin';
@@ -360,6 +472,12 @@ export class FeishuDocManager {
 		return mapping[normalized] ?? normalized.split('/').pop() ?? 'bin';
 	}
 
+	/**
+	 * 从图片 URL 推断文件名。
+	 * @param imageUrl - 图片的 URL。
+	 * @param contentType - 图片的 Content-Type。
+	 * @returns 推断出的文件名，如果失败则使用默认名称。
+	 */
 	private inferFileName(imageUrl: string, contentType?: string): string {
 		try {
 			const parsedUrl = new URL(imageUrl);
@@ -377,6 +495,12 @@ export class FeishuDocManager {
 		}
 	}
 
+	/**
+	 * 从图片二进制缓冲获取图片尺寸。
+	 * @param buffer - 图片的 ArrayBuffer 数据。
+	 * @param contentType - 图片的 Content-Type。
+	 * @returns 包含图片宽度和高度的对象，如果无法解析则返回 null。
+	 */
 	private async getImageDimensionsFromBuffer(
 		buffer: ArrayBuffer,
 		contentType?: string
@@ -423,6 +547,13 @@ export class FeishuDocManager {
 		}
 	}
 
+	/**
+	 * 上传图片到飞书开放平台，获取图片 token。
+	 * @param imageBlockId - 图片块的 ID。
+	 * @param imageBinary - 包含图片二进制数据的信息。
+	 * @returns 飞书返回的图片 token。
+	 * @throws ImageProcessingError 如果上传失败或飞书接口报错。
+	 */
 	private async uploadImageToBlock(
 		imageBlockId: string,
 		imageBinary: DownloadedImageBinary
@@ -459,6 +590,13 @@ export class FeishuDocManager {
 		return resData.data.file_token;
 	}
 
+	/**
+	 * 批量替换文档中的图片。
+	 * @param documentId - 文档 ID。
+	 * @param replacements - 图片替换的负载信息数组。
+	 * @returns 无。
+	 * @throws ImageProcessingError 如果批量替换失败或飞书接口报错。
+	 */
 	private async replaceDocumentImages(
 		documentId: string,
 		replacements: ImageReplacementPayload[]
@@ -530,6 +668,13 @@ export class FeishuDocManager {
 		await Promise.all(Array.from({ length: concurrency }, () => worker()));
 	}
 
+	/**
+	 * 上传图片并获取替换信息。
+	 * @param realBlockId - 真实的图片块 ID。
+	 * @param imageBinary - 包含图片二进制数据的信息。
+	 * @param block - 原始的图片块对象。
+	 * @returns 包含图片替换负载信息的对象，如果处理失败则返回 null。
+	 */
 	private async uploadAndGetReplacement(
 		realBlockId: string,
 		imageBinary: DownloadedImageBinary,
@@ -563,6 +708,12 @@ export class FeishuDocManager {
 		}
 	}
 
+	/**
+	 * 预处理图片块：下载图片二进制数据并缓存。
+	 * @param imageBlocks - 图片块数组。
+	 * @param imageUrlMap - 块 ID 到图片 URL 的映射。
+	 * @returns 包含图片二进制数据缓存和跳过的块 ID 列表。
+	 */
 	private async prepareImageBlocks(
 		imageBlocks: Block[],
 		imageUrlMap: Map<string, string>
@@ -622,9 +773,12 @@ export class FeishuDocManager {
 	}
 
 	/**
-	 * 写入文档内容
-	 * @param title 文档标题
-	 * @param content 文档内容
+	 * 写入文档内容。
+	 * 根据是否提供 metadata，会构建不同的文档结构，并处理图片上传和替换。
+	 * @param payload - 包含文档标题和内容的负载。
+	 * @param metadata - 可选的元数据，如果提供则会添加到文档开头。
+	 * @returns 新创建文档的 ID。
+	 * @throws 如果没有内容可以写入文档。
 	 */
 	async writeDocContent(
 		payload: DocPayload,
