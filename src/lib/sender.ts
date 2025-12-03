@@ -144,17 +144,16 @@ export async function sendToFeishu(formId: string): Promise<string> {
 			return await sendToFeishuBitable(formId, payload);
 		}
 		case '飞书文档': {
+			const { content, ...rest } = articleData;
 			const payload: DocPayload = {
 				title: articleData.title,
-				content: articleData.content
+				content
 			};
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
-			const { content, ...rest } = articleData;
 			return await sendToFeishuDoc(formId, payload as DocPayload, rest);
 		}
 		case '联动配置': {
-			const linkForm = getForm(form.linkForm.id);
-			const docForm = getForm(form.docForm.id);
+			const linkForm = getForm(form.linkFormId);
+			const docForm = getForm(form.docFormId);
 
 			if (!linkForm || !docForm) {
 				throw new Error('联动配置中的表单未找到');
@@ -165,10 +164,15 @@ export async function sendToFeishu(formId: string): Promise<string> {
 			}
 
 			// 先创建文档
-			const docUrl = await sendToFeishuDoc(docForm.id, {
-				title: articleData.title,
-				content: articleData.content
-			});
+			const { content, ...rest } = articleData;
+			const docUrl = await sendToFeishuDoc(
+				docForm.id,
+				{
+					title: articleData.title,
+					content
+				},
+				rest
+			);
 
 			// 再在表格中添加内容
 

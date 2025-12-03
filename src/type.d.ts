@@ -159,8 +159,8 @@ declare global {
 		 */
 		name: string;
 		formType: '联动配置';
-		linkForm: SheetFormType | BitableFormType;
-		docForm: DocFromType;
+		linkFormId: SheetFormType['id'] | BitableFormType['id'];
+		docFormId: DocFromType['id'];
 	};
 
 	type FormType = SheetFormType | BitableFormType | DocFromType | UnionFormType;
@@ -169,7 +169,7 @@ declare global {
 
 	type FormTypeName = FormType['formType'];
 	type EditMode = 'create' | 'edit';
-	type PageType = 'index' | 'settings' | 'formList' | 'formEdit' | "formCreate";
+	type PageType = 'index' | 'settings' | 'formList' | 'formEdit' | 'formCreate';
 }
 
 export {};

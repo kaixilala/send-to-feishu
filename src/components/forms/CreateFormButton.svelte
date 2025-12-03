@@ -5,7 +5,7 @@
 
 {#snippet createNewForm(type: FormTypeName)}
 	<li>
-		<a href={getPagePath('formCreate', { type })} class="btn rounded-2xl btn-ghost"
+		<a href={getPagePath('formCreate', { type })} class="btn w-full rounded-2xl btn-ghost btn-sm"
 			>{FORM_ICONS[type]} {type}</a
 		>
 	</li>

@@ -1,19 +1,5 @@
-const urlObj = new URL(
-	'https://yuanwang.feishu.cn/wiki/Xjy0wDCYZi0aSYkZQL7cW5z8nCh?table=tblbe5qlPODl1bGk&view=vewiuL69F3'
-);
+const steps = ['填写链接', '选择工作表', '选择字段', '填写起始列', '起个名字'] as const;
 
+const stepIndex = steps.indexOf('填写链接'); ;
 
-const pathList = urlObj.pathname.split('/');
-const tokenType = pathList[1];
-const nodeToken = pathList[pathList.length - 1];
-
-console.log('pathList', pathList);
-console.log('nodeToken', nodeToken);
-
-if (!nodeToken) {
-	throw new Error('无法从链接中解析出知识结点 Token，请检查链接是否正确');
-}
-// 判断是否是知识结点 token
-if (tokenType === 'wiki') {
-	console.log('是知识结点 token');
-}
+console.log(`当前步骤索引是：${stepIndex}`);

@@ -1,6 +1,6 @@
 // API 参考文档 https://open.feishu.cn/document/server-docs/docs/sheets-v3/data-operation/append-data
 import { stringifyDate } from '../utils';
-import { FeishuToken } from './credential-token-manager';
+import { FeishuToken } from './feishu-token-manager';
 export type SheetPayload = Array<Array<string | { text: string; link: string; type: 'url' }>>;
 import { credentials } from '@/components/settings/settings.svelte';
 import { getNodeToken } from './get-node-token';
@@ -78,7 +78,7 @@ export class FeishuSheetManager {
 	 * @param sheetToken 电子表格的 token
 	 * @returns
 	 */
-	static async getSheets(sheetToken: string) {
+	static async getWorkSheets(sheetToken: string) {
 		if (!credentials.tokenManager) {
 			throw new Error('未找到有效的凭据');
 		}
