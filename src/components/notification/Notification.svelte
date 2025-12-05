@@ -16,7 +16,7 @@
 	};
 </script>
 
-{#if notificationManager.visible && notificationManager.message && notificationManager.props}
+{#if notificationManager.visible && notificationManager.message}
 	<div class="toast toast-end z-9999 w-fit">
 		<div
 			class="relative alert alert-vertical alert-soft pt-10 pb-6 lg:max-w-180 {alertTypeMap[

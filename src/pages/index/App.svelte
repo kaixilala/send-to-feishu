@@ -11,7 +11,7 @@
 </script>
 
 {#snippet susccessMessage(url: string)}
-	<p>保存成功，<a href={url}>点击查看</a></p>
+	<p>保存成功，<a class="link link-success" href={url}>点击查看</a></p>
 {/snippet}
 
 {#snippet listItem(form: FormType)}
