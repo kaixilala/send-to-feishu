@@ -6,6 +6,10 @@ export const allForms: Forms = $state([]);
 	allForms.push(...forms);
 })();
 
+export async function saveForm() {
+	return await chrome.storage.local.set({ forms: $state.snapshot(allForms) });
+}
+
 export function getForm(id: string): FormType | undefined {
 	const form = allForms.find((form) => form.id === id);
 

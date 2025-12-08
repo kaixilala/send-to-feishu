@@ -5,11 +5,6 @@
 </script>
 
 <FormSettingLayout {form} {isComplete}>
-	{#snippet title()}
-		<span class="mx-1 badge badge-sm badge-neutral">飞书文档</span>
-	{/snippet}
-
-
 	<!-- 配置名称 -->
 	<label for="name" class="label">配置名称</label>
 	<input

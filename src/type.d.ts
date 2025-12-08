@@ -70,15 +70,27 @@ declare global {
 
 	type SheetRangeIndex = { startIndex: string; endIndex: string };
 
-	type SheetFormTypeBase = {
+	interface BaseFormType {
+		/**
+		 *  配置 id
+		 */
 		id: string;
+		/**
+		 *  配置名称
+		 */
 		name: string;
+		/**
+		 * 表单类型名称
+		 */
+		formType: '电子表格' | '多维表格' | '飞书文档';
+	}
+	interface SheetFormTypeBase extends BaseFormType {
 		formType: '电子表格';
 		sheetToken: string;
 		sheetId: string;
 		rangeIndex: SheetRangeIndex;
 		fields: FetchedArticleField[];
-	};
+	}
 
 	type SheetFormWithDoc = SheetFormTypeBase & {
 		linkDocFormId: string;
@@ -101,15 +113,7 @@ declare global {
 		{ name: string; type: number } | undefined
 	>;
 
-	type BitableFormBase = {
-		/**
-		 *  配置 id
-		 */
-		id: string;
-		/**
-		 *  配置名称
-		 */
-		name: string;
+	interface BitableFormBase extends BaseFormType {
 		/**
 		 * 表单类型名称
 		 */
@@ -122,7 +126,7 @@ declare global {
 		 * 多维表格的数据表的 ID。
 		 */
 		tableId: string;
-	};
+	}
 
 	type BitableFormWithDoc = BitableFormBase & {
 		/**
@@ -139,15 +143,7 @@ declare global {
 
 	type BitableFormType = BitableFormWithDoc | BitableFormWithoutDoc;
 
-	type DocFromType = {
-		/**
-		 *  配置 id
-		 */
-		id: string;
-		/**
-		 *  配置名称
-		 */
-		name: string;
+	interface DocFromType extends BaseFormType {
 		/**
 		 * 表单类型名称
 		 */
@@ -156,7 +152,7 @@ declare global {
 		 * 指定飞书文件夹的 token, 不传表示上传到根目录。
 		 */
 		folderToken: string;
-	};
+	}
 
 	type FormType = SheetFormType | BitableFormType | DocFromType;
 
@@ -164,7 +160,7 @@ declare global {
 
 	type FormTypeName = FormType['formType'];
 	type EditMode = 'create' | 'edit';
-	type PageType = 'index' | 'settings' | 'formList' | 'formEdit' | 'formCreate';
+	type PageType = 'index' | 'settings' | 'formList' | 'formEdit' | 'formCreate' | 'save';
 }
 
 export {};

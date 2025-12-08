@@ -8,7 +8,7 @@
 
 <Nav />
 <Notification />
-<main class="container mx-auto min-h-screen p-2">
+<main class="container mx-auto p-2">
 	{@render children()}
 	{#if isDev}
 		<span class=" fixed bottom-2 left-2 badge badge-sm badge-warning">Dev Mode</span>

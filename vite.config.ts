@@ -36,7 +36,8 @@ export default defineConfig({
 				formCreate: 'src/pages/formCreate/index.html',
 				formEdit: 'src/pages/formEdit/index.html',
 				formList: 'src/pages/formList/index.html',
-				settings: 'src/pages/settings/index.html'
+				settings: 'src/pages/settings/index.html',
+				save: 'src/pages/save/index.html'
 			}
 		}
 	}

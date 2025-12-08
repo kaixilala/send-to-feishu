@@ -1,18 +1,12 @@
 <script lang="ts">
 	import Layout from '@/components/layout/Layout.svelte';
-	import { notificationManager } from '@/components/notification/notificationManager.svelte';
 	import { FORM_ICONS } from '@/lib/const';
 	import { allForms } from '@/components/forms/forms.svelte';
 	import { credentials } from '@/components/settings/settings.svelte';
-	import { sendToFeishu } from '@/lib/sender';
+	import { getPagePath } from '@/lib/utils';
 	import OnInstallGuide from '@/components/settings/OnInstallGuide.svelte';
 	import CreateFormButton from '@/components/forms/CreateFormButton.svelte';
-	let isLoading: boolean = $state(false);
 </script>
-
-{#snippet susccessMessage(url: string)}
-	<p>保存成功，<a class="link link-success" href={url}>点击查看</a></p>
-{/snippet}
 
 {#snippet listItem(form: FormType)}
 	<li class="list-row">
@@ -23,26 +17,7 @@
 				{form.formType}
 			</div>
 		</div>
-		<button
-			type="button"
-			class="btn rounded-2xl btn-primary"
-			disabled={isLoading}
-			onclick={async () => {
-				try {
-					isLoading = true;
-					const resultUrl = await sendToFeishu(form.id);
-					notificationManager.sentMessage({
-						type: 'success',
-						message: susccessMessage,
-						props: resultUrl
-					});
-				} catch (error) {
-					const errorMessage = error instanceof Error ? error.message : String(error);
-					alert(`发送失败：${errorMessage}`);
-				}
-				isLoading = false;
-			}}>保存</button
-		>
+		<a href={getPagePath('save', { formId: form.id })} class="btn rounded-2xl btn-primary">保存</a>
 	</li>
 {/snippet}
 

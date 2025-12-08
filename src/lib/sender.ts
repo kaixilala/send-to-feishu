@@ -5,8 +5,7 @@ import { FeishuBitableManager, type BitablePayload } from '@/lib/feishu/bitable'
 import { FeishuDocManager, type DocPayload } from '@/lib/feishu/doc';
 
 import { FeishuSheetManager, type SheetPayload } from '@/lib/feishu/sheet';
-import { getCurrentTabContent } from './utils';
-import { extractWebArticle } from './extract';
+
 
 async function sendToFeishuSheet(formId: string, payload: SheetPayload) {
 	if (!credentials.tokenManager) {
@@ -108,30 +107,14 @@ async function sendToFeishuDoc(
  * @param {string} formId 表单配置的 ID
  * @returns {Promise<string>}  返回飞书中创建的内容的链接
  */
-export async function sendToFeishu(formId: string): Promise<string> {
+export async function sendToFeishu(formId: string, articleData: FetchedArticle): Promise<string> {
 	const form = getForm(formId);
 
 	if (!form) {
 		throw new Error('表单配置未找到');
 	}
 
-	let html, url;
-	try {
-		const content = await getCurrentTabContent();
-		html = content.html;
-		url = content.url;
-	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		if (
-			errorMessage.includes('Receiving end does not exist') ||
-			errorMessage.includes('Could not establish connection')
-		) {
-			throw new Error('无法连接到当前页面，请刷新页面后重试，或检查当前页面是否支持该扩展。');
-		}
-		throw error;
-	}
-
-	const articleData = await extractWebArticle(html, url);
+	
 
 	switch (form.formType) {
 		case '电子表格': {
