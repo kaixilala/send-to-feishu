@@ -8,7 +8,12 @@
 		onPre
 	}: { form: BitableFormType; onNext: () => void; onPre: () => void } = $props();
 	let tables = $derived.by(async () => {
-		return await FeishuBitableManager.getBitableTables(form.appToken);
+		try {
+			return await FeishuBitableManager.getBitableTables(form.appToken);
+		} catch (e) {
+			alert(`获取数据表失败：${(e as Error).message}`);
+			return [];
+		}
 	});
 </script>
 

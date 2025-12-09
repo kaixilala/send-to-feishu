@@ -3,7 +3,7 @@
 	import Layout from '@/components/layout/Layout.svelte';
 	import { getPagePath } from '@/lib/utils';
 	import { allForms } from '@/components/forms/forms.svelte';
-	import { FORM_ICONS } from '@/lib/const';
+
 	import { saveForm } from '@/components/forms/forms.svelte';
 	async function moveField(index: number, direction: 'up' | 'down') {
 		if (direction === 'up' && index > 0) {
@@ -22,7 +22,7 @@
 
 {#snippet listItem(form: FormType, index: number)}
 	<li class="list-row">
-		<div><span class="text-4xl">{FORM_ICONS[form.formType]}</span></div>
+		<div><span class="text-4xl">{form.icon}</span></div>
 		<div class="">
 			<div class="text-xl">{form.name}</div>
 			<div class="text-xs font-semibold opacity-60">

@@ -139,7 +139,7 @@ export class FeishuToken extends BaseToken {
 		tokenUrl: string,
 		init: RequestInit,
 		/**
-		 * 用户飞书文档的基础链接，例如 https://example.feishu.cn/
+		 * 用户飞书文档的基础链接，例如 https://xxx.feishu.cn/
 		 */
 		private baseUrl: string
 	) {

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import DocParseFolderUrl from './step/DocParseFolderUrl.svelte';
 	import DocName from './step/DocName.svelte';
+	import { gotoPage } from '@/lib/utils';
 
 	let form: DocFromType = $state({
 		id: crypto.randomUUID(),
+		icon: '🗒️',
 		formType: '飞书文档',
 		name: '',
 		folderToken: ''
@@ -20,6 +22,10 @@
 	}
 
 	function pre() {
+		if (currentStepIndex === 0) {
+			gotoPage('formList');
+		}
+
 		if (currentStepIndex > 0) {
 			currentStepIndex--;
 		}

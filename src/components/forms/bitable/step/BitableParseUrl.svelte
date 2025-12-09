@@ -22,22 +22,31 @@
 	description="要把网页内容保存到哪个多维表格？把它的 Url 链接放到这里吧 ⬇️"
 >
 	<div class="flex flex-col items-start">
-		<input
-			required
-			id="bitableUrl"
-			type="text"
-			class="input w-80"
-			bind:value={url}
-			placeholder="https://example.feishu.cn/base/xxxxxx"
-		/>
+		<div class="join">
+			<input
+				required
+				id="sheetUrl"
+				type="text"
+				class="input join-item w-70 text-sm"
+				bind:value={url}
+				placeholder="https://xxx.feishu.cn/sheets/xxxxxx"
+			/>
+			<button type="button" class="btn join-item" onclick={parseBitableUrl}>解析链接</button>
+		</div>
+
 		<p class="label mt-2">解析出的 token 为 {form.appToken}</p>
 	</div>
 
-	<button type="button" class="btn mt-4 rounded btn-sm" onclick={parseBitableUrl}>解析链接</button>
 	{#snippet footer()}
 		<div class=" flex flex-row gap-4">
 			<StepButton isDisable={false} onclick={onPre} description="上一步" />
-			<StepButton isDisable={!form.appToken} onclick={onNext} description="下一步" />
+			<StepButton
+				isDisable={!form.appToken}
+				onclick={() => {
+					onNext();
+				}}
+				description="下一步"
+			/>
 		</div>
 	{/snippet}
 </StepLayout>

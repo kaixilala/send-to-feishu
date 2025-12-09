@@ -7,7 +7,11 @@
 	let allBitableFields: Promise<BitableFieldsData['items']> | undefined = $state();
 
 	function getBitableFields() {
-		allBitableFields = FeishuBitableManager.getBitableFields(form.appToken, form.tableId);
+		try {
+			allBitableFields = FeishuBitableManager.getBitableFields(form.appToken, form.tableId);
+		} catch (e) {
+			alert(`获取多维表格字段失败：${(e as Error).message}`);
+		}
 	}
 
 	const visibleFields = Object.keys(ARTICLE_FIELDS).filter((f) => {
@@ -45,8 +49,8 @@
 			<div class="flex flex-col gap-2">
 				{#each visibleFields as field (field)}
 					{@const fieldsMap = form.fieldsMap as BitableFieldsMapWithDoc}
-					<label for={field} class="select">
-						<span class="label w-30">{ARTICLE_FIELDS[field]}</span>
+					<label for={field} class="select w-80">
+						<span class="label w-40">{ARTICLE_FIELDS[field]}</span>
 						<select
 							value={fieldsMap[field]?.name || ''}
 							onchange={(e) => {

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Snippet } from 'svelte';
 /**
  * 通知消息对象的接口描述。
  *
@@ -16,8 +14,7 @@ import type { Snippet } from 'svelte';
  * @property duration - 可选，通知显示的持续时间，单位为毫秒（ms）。未指定时由调用方或框架决定默认行为（例如永久显示或使用全局默认值）。
  */
 export interface NotificationMessage {
-	message: Snippet<[any]> | undefined;
-	props?: any;
+	message: string;
 	type?: 'info' | 'success' | 'error' | 'warning';
 	visible: boolean;
 	duration?: number;
@@ -53,34 +50,64 @@ export type NewNotificationMessage = Omit<NotificationMessage, 'visible'>;
  * @class NotificationManager
  * @implements {NotificationMessage}
  *
- * 该类负责在应用程序中管理和显示通知消息。
- * 它使用 Svelte 5 的 runes (`$state`, `$effect`) 来实现响应式状态管理。
- *
- * @property {Snippet<[unknown]>} message - 通知的内容。
+ * @property {string} message - 通知的内容。
  * @property {"info" | "success" | "error" | "warning"} type - 通知的类型，默认为 "info"。
  * @property {boolean} visible - 控制通知的可见性。
  * @property {number} duration - 通知显示的持续时间（以毫秒为单位），默认为 3000ms。
  */
 class NotificationManager implements NotificationMessage {
-	message: Snippet<[any]> | undefined = $state();
-	props: any = $state();
+	message: string = $state('');
 	type: 'info' | 'success' | 'error' | 'warning' = $state('info');
 	visible: boolean = $state(false);
 	duration: number = $state(3000); // in ms
+
+	constructor() {
+		this.checkPendingMessages();
+	}
+
+	async checkPendingMessages() {
+		if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+			const result = (await chrome.storage.local.get('pending_notification')) as {
+				pending_notification: NewNotificationMessage;
+			};
+			if (result.pending_notification) {
+				await chrome.storage.local.remove('pending_notification');
+				this.sentMessage(result.pending_notification, false);
+			}
+		} else if (typeof sessionStorage !== 'undefined') {
+			const stored = sessionStorage.getItem('pending_notification');
+			if (stored) {
+				try {
+					const msg = JSON.parse(stored);
+					sessionStorage.removeItem('pending_notification');
+					this.sentMessage(msg, false);
+				} catch (e) {
+					console.error('Failed to parse pending notification', e);
+				}
+			}
+		}
+	}
 
 	/**
 	 * 发送并显示一条新的通知。
 	 *
 	 * @method sentMessage
 	 * @param {NewNotificationMessage} newMessage - 包含新通知信息的对象。
-	 * @property {Snippet<[unknown[]]> | undefined;} newMessage.message - 新通知的内容。
-	 * @property {unknown} [newMessage.props] - (可选) 传递给 message snippet 的参数。
+	 * @param {boolean} [persist=false] - 是否将通知持久化，以便在页面刷新或跳转后显示。
+	 * @property {string} [newMessage.message] - 新通知的内容。
 	 * @property {"info" | "success" | "error" | "warning"} [newMessage.type] - (可选) 新通知的类型。
 	 * @property {number} [newMessage.duration] - (可选) 新通知的显示时长，单位：毫秒，1 秒=1000 毫秒。
 	 */
-	sentMessage(newMessage: NewNotificationMessage) {
+	async sentMessage(newMessage: NewNotificationMessage, persist: boolean = false) {
+		if (persist) {
+			if (typeof chrome !== 'undefined' && chrome.storage?.local) {
+				await chrome.storage.local.set({ pending_notification: newMessage });
+			} else if (typeof sessionStorage !== 'undefined') {
+				sessionStorage.setItem('pending_notification', JSON.stringify(newMessage));
+			}
+		}
+
 		this.message = newMessage.message;
-		this.props = newMessage.props;
 		if (newMessage.type) this.type = newMessage.type;
 		if (newMessage.duration) this.duration = newMessage.duration;
 		this.visible = true;
@@ -98,8 +125,7 @@ class NotificationManager implements NotificationMessage {
 	 */
 	closeMessage() {
 		this.visible = false;
-		this.message = undefined;
-		this.props = undefined;
+		this.message = '';
 		this.type = 'info';
 	}
 }

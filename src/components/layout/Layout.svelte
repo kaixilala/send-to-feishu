@@ -4,7 +4,10 @@
 	import Nav from '@/components/layout/Nav.svelte';
 	import Notification from '../notification/Notification.svelte';
 	const isDev = import.meta.env.DEV;
+
+
 </script>
+
 
 <Nav />
 <Notification />

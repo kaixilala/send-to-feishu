@@ -1,8 +1,7 @@
 <script lang="ts">
 	import Layout from '@/components/layout/Layout.svelte';
-	import { FORM_ICONS } from '@/lib/const';
 	import { sendToFeishu } from '@/lib/sender';
-	import { getCurrentTabContent } from '@/lib/utils';
+	import { getCurrentTabContent, gotoPage } from '@/lib/utils';
 	import { allForms } from '@/components/forms/forms.svelte';
 	import { extractWebArticle } from '@/lib/extract';
 	import { stringifyDate } from '@/lib/utils';
@@ -34,9 +33,7 @@
 			</div>
 		{:then content}
 			<fieldset class="fieldset w-xs rounded-box border border-base-300 bg-base-200 p-4">
-				<legend class="fieldset-legend"
-					>保存到：{FORM_ICONS[form.formType] + ' ' + form.name}</legend
-				>
+				<legend class="fieldset-legend">保存到：{form.icon + ' ' + form.name}</legend>
 
 				<label for="articleTitle" class="label">标题</label>
 				<input
@@ -154,7 +151,12 @@
 			</p>
 			<div class="modal-action">
 				<form method="dialog">
-					<button class="btn" >关闭</button>
+					<button
+						class="btn"
+						onclick={() => {
+							gotoPage('index');
+						}}>关闭</button
+					>
 				</form>
 			</div>
 		</div>

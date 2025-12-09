@@ -3,10 +3,10 @@
 	import { FORM_ICONS } from '@/lib/const';
 </script>
 
-{#snippet createNewForm(type: FormTypeName)}
+{#snippet createNewForm(typeName: FormTypeName)}
 	<li>
-		<a href={getPagePath('formCreate', { type })} class="btn w-full rounded-2xl btn-ghost btn-sm"
-			>{FORM_ICONS[type]} {type}</a
+		<a href={getPagePath('formCreate', { type: typeName })} class="btn w-full rounded-2xl btn-ghost"
+			>{FORM_ICONS[typeName]} {typeName}</a
 		>
 	</li>
 {/snippet}

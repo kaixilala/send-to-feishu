@@ -23,9 +23,9 @@
 				notificationManager.type
 			]}"
 		>
-			<div class="text-start text-sm text-wrap">
-				{@render notificationManager.message(notificationManager.props)}
-			</div>
+			<p class="text-start text-sm text-wrap">
+				{notificationManager.message}
+			</p>
 
 			<button
 				onclick={() => {

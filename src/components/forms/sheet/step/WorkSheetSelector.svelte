@@ -8,7 +8,12 @@
 		onPre
 	}: { form: SheetFormType; onNext: () => void; onPre: () => void } = $props();
 	let worksheets = $derived.by(async () => {
-		return await FeishuSheetManager.getWorkSheets(form.sheetToken);
+		try {
+			return await FeishuSheetManager.getWorkSheets(form.sheetToken);
+		} catch (e) {
+			alert(`获取工作表失败：${(e as Error).message}`);
+			return [];
+		}
 	});
 </script>
 

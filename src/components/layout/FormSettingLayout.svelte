@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 	import { setForm, deleteForm } from '@/components/forms/forms.svelte';
 	import { gotoPage } from '@/lib/utils';
-	import { FORM_ICONS } from '@/lib/const';
 	let {
 		form,
 		isComplete,
@@ -48,9 +47,9 @@
 	<fieldset class="mx-auto fieldset w-xs rounded-box border border-base-300 bg-base-200 p-4">
 		<legend class="fieldset-legend">
 			{#if isCreateMode}
-				<span>新建 {FORM_ICONS[form.formType] + ' ' + form.name} 配置</span>
+				<span>新建 {form.icon + ' ' + form.name} 配置</span>
 			{:else}
-				<span>修改 {FORM_ICONS[form.formType] + ' ' + form.name} 配置</span>
+				<span>修改 {form.icon + ' ' + form.name} 配置</span>
 			{/if}
 		</legend>
 		<p class="label text-wrap">

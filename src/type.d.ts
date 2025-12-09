@@ -80,6 +80,10 @@ declare global {
 		 */
 		name: string;
 		/**
+		 * 图标，只能输入一个字符
+		 */
+		icon: string;
+		/**
 		 * 表单类型名称
 		 */
 		formType: '电子表格' | '多维表格' | '飞书文档';

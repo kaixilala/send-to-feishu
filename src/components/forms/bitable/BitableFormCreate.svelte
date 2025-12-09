@@ -4,9 +4,11 @@
 	import BitableTableSelector from './step/BitableTableSelector.svelte';
 	import BitableFieldMatchStep from './step/BitableFieldMatchStep.svelte';
 	import BitableName from './step/BitableName.svelte';
+	import { gotoPage } from '@/lib/utils';
 
 	let form: BitableFormType = $state({
 		id: crypto.randomUUID(),
+		icon: '🗂️',
 		formType: '多维表格',
 		name: '',
 		appToken: '',
@@ -39,6 +41,9 @@
 	}
 
 	function pre() {
+		if (currentStepIndex === 0) {
+			gotoPage("formList");
+		}
 		if (currentStepIndex > 0) {
 			currentStepIndex--;
 		}

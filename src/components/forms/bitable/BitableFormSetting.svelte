@@ -7,43 +7,65 @@
 </script>
 
 <FormSettingLayout {form} {isComplete}>
-	<!-- 配置名称 -->
-	<label for="name" class="label">配置名称</label>
-	<input
-		required
-		id="name"
-		type="text"
-		class="input"
-		placeholder="配置名称"
-		bind:value={form.name}
-	/>
+	<!-- 配置名称和图标 -->
+	<div class="flex w-full flex-row gap-2">
+		<div class="flex-1">
+			<label for="icon" class="label">配置图标</label>
+			<input
+				required
+				id="icon"
+				type="text"
+				class="input"
+				placeholder="配置图标"
+				bind:value={form.icon}
+			/>
+			<p class="label">建议使用 emoji</p>
+		</div>
+		<div class="flex-2">
+			<label for="name" class="label">配置名称</label>
+			<input
+				required
+				id="name"
+				type="text"
+				class="input"
+				placeholder="配置名称"
+				bind:value={form.name}
+			/>
+		</div>
+	</div>
 
 	<!-- 是否和飞书文档关联 -->
-	<label for="linkDocForm" class="label">App Token</label>
-	<BitableSaveArticle bind:form />
+	<div>
+		<label for="linkDocForm" class="label">App Token</label>
+		<BitableSaveArticle bind:form />
+	</div>
 
 	<!-- App Token -->
-	<label for="appToken" class="label">App Token</label>
-	<input
-		required
-		id="appToken"
-		type="text"
-		class="input"
-		placeholder="App Token"
-		bind:value={form.appToken}
-	/>
-
+	<div>
+		<label for="appToken" class="label">App Token</label>
+		<input
+			required
+			id="appToken"
+			type="text"
+			class="input"
+			placeholder="App Token"
+			bind:value={form.appToken}
+		/>
+	</div>
 	<!-- Table ID -->
-	<label for="tableId" class="label">Table ID</label>
-	<input
-		required
-		id="tableId"
-		type="text"
-		class="input"
-		placeholder="Table ID"
-		bind:value={form.tableId}
-	/>
-
+	<div>
+		<label for="tableId" class="label">Table ID</label>
+		<input
+			required
+			id="tableId"
+			type="text"
+			class="input"
+			placeholder="Table ID"
+			bind:value={form.tableId}
+		/>
+	</div>
 	<!-- fieldMap -->
-	<BitableArticleFieldMatch {form} />
+	<div>
+		<BitableArticleFieldMatch {form} />
+	</div>
 </FormSettingLayout>

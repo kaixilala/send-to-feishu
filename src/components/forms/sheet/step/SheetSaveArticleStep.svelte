@@ -17,7 +17,7 @@
 	<SheetSaveArticle bind:form />
 	{#snippet footer()}
 		<div class=" flex flex-row gap-4">
-			<StepButton isDisable={true} onclick={onPre} description="上一步" />
+			<StepButton isDisable={false} onclick={onPre} description="上一步" />
 			<StepButton isDisable={false} onclick={onNext} description="下一步" />
 		</div>
 	{/snippet}

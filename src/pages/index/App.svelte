@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Layout from '@/components/layout/Layout.svelte';
-	import { FORM_ICONS } from '@/lib/const';
 	import { allForms } from '@/components/forms/forms.svelte';
 	import { credentials } from '@/components/settings/settings.svelte';
 	import { getPagePath } from '@/lib/utils';
@@ -10,7 +9,7 @@
 
 {#snippet listItem(form: FormType)}
 	<li class="list-row">
-		<div><span class="text-4xl">{FORM_ICONS[form.formType]}</span></div>
+		<div><span class="text-4xl">{form.icon}</span></div>
 		<div class="">
 			<div class="text-xl">{form.name}</div>
 			<div class="text-xs font-semibold opacity-60">

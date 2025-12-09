@@ -7,16 +7,16 @@
 </script>
 
 <select
-	class="select"
+	class="select min-w-60"
 	id="linkDocForm"
 	onchange={() => {
 		form.linkDocFormId = selectedDocFormId;
 	}}
 	bind:value={selectedDocFormId}
 >
-	<option value={undefined}>不关联飞书文档</option>
+	<option value={undefined}>🚫 不关联飞书文档</option>
 	{#each docForms as docForm (docForm.id)}
-		<option value={docForm.id}>{docForm.name}</option>
+		<option value={docForm.id}>{docForm.icon} {docForm.name}</option>
 	{/each}
 	<option
 		value={undefined}
