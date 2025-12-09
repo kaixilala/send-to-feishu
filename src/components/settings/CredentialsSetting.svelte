@@ -87,7 +87,11 @@
 			placeholder="https://xxx.feishu.cn/"
 			bind:value={feishuBaseUrl}
 		/>
-		<button onclick={handleSave} class="btn mt-4 rounded-2xl btn-neutral">保存并测试</button>
+		<button
+			onclick={handleSave}
+			disabled={!feishuAppId || !feishuAppSecret || !feishuBaseUrl}
+			class="btn mt-4 rounded-2xl btn-neutral">保存并测试</button
+		>
 		<button
 			disabled={!credentials.feishuAppId}
 			onclick={() => {

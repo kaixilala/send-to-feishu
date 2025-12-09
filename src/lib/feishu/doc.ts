@@ -260,13 +260,22 @@ export class FeishuDocManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书文档接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
 			throw new Error(`请求飞书解析文档接口失败，${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse<ParseDocResult> = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书解析文档接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书文档接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 
 		return resData.data;
@@ -296,13 +305,23 @@ export class FeishuDocManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书文档接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
+
 			throw new Error(`请求飞书创建文档接口失败，${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse<CreateDocResponse> = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书创建文档接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书文档接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 
 		return resData.data.document.document_id;
@@ -361,13 +380,22 @@ export class FeishuDocManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书文档接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
 			throw new Error(`写入文档分片失败，错误消息：${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse<CreateDescendantResponse> = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书写入文档接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书文档接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 
 		return resData.data?.block_id_relations ?? [];

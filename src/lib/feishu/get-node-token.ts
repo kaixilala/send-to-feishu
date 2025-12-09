@@ -27,9 +27,6 @@ export async function getNodeToken(url: string): Promise<{ token: string; object
 	const tokenType = pathList[1] as PathName;
 	const token = pathList[pathList.length - 1];
 
-	console.log('pathList', pathList);
-	console.log('nodeToken', token);
-
 	if (!token) {
 		throw new Error('无法从链接中解析出知识结点 Token，请检查链接是否正确');
 	}

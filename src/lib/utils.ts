@@ -63,7 +63,17 @@ export async function getCurrentTabContent(): Promise<{ html: string; url: strin
 	throw new Error('No active tab found');
 }
 
+/**
+ * 将一般的 date 或 时间字符串转化为  YYYY-MM-DD hh:mm:ss 格式的字符串
+ * @author dkphhh
+ *
+ * @export
+ * @param {(Date | string | number)} dateInput
+ * @returns {string}
+ */
 export function stringifyDate(dateInput: Date | string | number): string {
+	if (!dateInput) return '';
+
 	const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
 	if (Number.isNaN(date.getTime())) {
 		throw new Error('Invalid date value provided to stringifyDate');

@@ -54,6 +54,13 @@ export class FeishuSheetManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书电子表格接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
 			throw new Error(`请求电子表格接口失败，${await res.text()}`);
 		}
 
@@ -67,7 +74,9 @@ export class FeishuSheetManager {
 		}> = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`电子表格接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书电子表格接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 		// 返回特定行的数据
 		return resData.data.valueRange.values[0];
@@ -96,6 +105,14 @@ export class FeishuSheetManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书电子表格接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
+
 			throw new Error(`请求电子表格接口失败，${await res.text()}`);
 		}
 
@@ -105,6 +122,12 @@ export class FeishuSheetManager {
 				title: string;
 			}>;
 		}> = await res.json();
+
+		if (resData.code !== 0) {
+			throw new Error(
+				`飞书电子表格接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
+		}
 
 		return resData.data.sheets;
 	}
@@ -178,7 +201,6 @@ export class FeishuSheetManager {
 	 * @returns
 	 */
 	private getRange(): string {
-		console.log('rangeIndex:', this.rangeIndex);
 		if (this.rangeIndex.startIndex === '') {
 			return this.sheetId;
 		}
@@ -201,7 +223,7 @@ export class FeishuSheetManager {
 			Authorization: `Bearer ${await this.tokenManager.getToken()}`,
 			'Content-Type': 'application/json; charset=utf-8'
 		};
-		console.log('range:', this.getRange());
+
 		const body = JSON.stringify({
 			valueRange: { range: this.getRange(), values: payload }
 		});
@@ -213,13 +235,23 @@ export class FeishuSheetManager {
 		});
 
 		if (!res.ok) {
-			throw new Error(`请求电子表格接口失败，${await res.text()}`);
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书电子表格接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
+
+			throw new Error(`请求飞书电子表格接口失败，${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`电子表格接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书电子表格接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 	}
 }

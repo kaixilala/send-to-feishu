@@ -80,6 +80,14 @@ export class FeishuBitableManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书多维表格接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
+
 			throw new Error(`请求飞书多维表格接口失败，${await res.text()}`);
 		}
 
@@ -95,7 +103,9 @@ export class FeishuBitableManager {
 		}> = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书多维表格接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书多维表格接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 
 		return resData.data.items;
@@ -125,13 +135,23 @@ export class FeishuBitableManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书多维表格接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
+
 			throw new Error(`请求飞书多维表格接口失败，${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse<BitableFieldsData> = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书多维表格接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书多维表格接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 
 		if (resData.data.has_more) {
@@ -205,13 +225,23 @@ export class FeishuBitableManager {
 		});
 
 		if (!res.ok) {
+			const resData: FeishuApiResponse = await res.json();
+
+			if (resData.code) {
+				throw new Error(
+					`飞书多维表格接口报错。请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+				);
+			}
+
 			throw new Error(`请求飞书多维表格接口失败，${await res.text()}`);
 		}
 
 		const resData: FeishuApiResponse = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(`飞书多维表格接口报错：${resData.msg}`);
+			throw new Error(
+				`飞书多维表格接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}`
+			);
 		}
 	}
 

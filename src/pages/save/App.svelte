@@ -17,6 +17,17 @@
 		const { html, url } = await getCurrentTabContent();
 		return await extractWebArticle(html, url);
 	});
+
+	const visibleFields = $derived.by(() => {
+		if (form.formType === '电子表格') {
+			return new Set((form as SheetFormType).fields);
+		} else if (form.formType === '多维表格') {
+			const map = (form as BitableFormType).fieldsMap;
+			return new Set(Object.keys(map).filter((k) => map[k as keyof typeof map]));
+		}
+		return null;
+	});
+
 	let sendingModal: HTMLDialogElement;
 	let result = $state<{
 		type: 'success' | 'error';
@@ -26,72 +37,84 @@
 </script>
 
 <Layout>
-	<div class="flex flex-col items-center gap-4">
+	<div class="flex w-full flex-col items-center gap-4">
 		{#await currentTabContent}
-			<div class="container mx-auto my-auto h-full">
+			<div class="container flex h-80 flex-row items-center justify-center">
 				<span class="loading loading-sm loading-spinner"></span>
 			</div>
 		{:then content}
 			<fieldset class="fieldset w-xs rounded-box border border-base-300 bg-base-200 p-4">
 				<legend class="fieldset-legend">保存到：{form.icon + ' ' + form.name}</legend>
 
-				<label for="articleTitle" class="label">标题</label>
-				<input
-					id="articleTitle"
-					type="text"
-					class="input"
-					bind:value={content.title}
-					placeholder="文章标题"
-				/>
+				{#if visibleFields === null || visibleFields.has('title')}
+					<label for="articleTitle" class="label">标题</label>
+					<input
+						id="articleTitle"
+						type="text"
+						class="input"
+						bind:value={content.title}
+						placeholder="文章标题"
+					/>
+				{/if}
 
-				<label for="articleAuthor" class="label">作者</label>
-				<input
-					id="articleAuthor"
-					type="text"
-					class="input"
-					bind:value={content.author}
-					placeholder="文章作者"
-				/>
+				{#if visibleFields === null || visibleFields.has('author')}
+					<label for="articleAuthor" class="label">作者</label>
+					<input
+						id="articleAuthor"
+						type="text"
+						class="input"
+						bind:value={content.author}
+						placeholder="文章作者"
+					/>
+				{/if}
 
-				<label for="articleDescription" class="label">描述</label>
-				<input
-					id="articleDescription"
-					type="text"
-					class="input"
-					bind:value={content.description}
-					placeholder="文章描述"
-				/>
+				{#if visibleFields === null || visibleFields.has('description')}
+					<label for="articleDescription" class="label">描述</label>
+					<input
+						id="articleDescription"
+						type="text"
+						class="input"
+						bind:value={content.description}
+						placeholder="文章描述"
+					/>
+				{/if}
 
-				<label for="articleDatetime" class="label">发布时间</label>
-				<input
-					id="articleDatetime"
-					type="datetime-local"
-					class="input"
-					value={new Date(content.published)}
-					onchange={(event) => {
-						const date = new Date((event.currentTarget as HTMLInputElement).value);
-						content.published = stringifyDate(date);
-					}}
-					placeholder="文章发布时间"
-				/>
+				{#if visibleFields === null || visibleFields.has('published')}
+					<label for="articleDatetime" class="label">发布时间</label>
+					<input
+						id="articleDatetime"
+						type="datetime-local"
+						class="input"
+						value={stringifyDate(content.published)}
+						onchange={(event) => {
+							const date = new Date((event.currentTarget as HTMLInputElement).value);
+							content.published = stringifyDate(date);
+						}}
+						placeholder="文章发布时间"
+					/>
+				{/if}
 
-				<label for="articleSource" class="label">来源</label>
-				<input
-					id="articleSource"
-					type="text"
-					class="input"
-					bind:value={content.source}
-					placeholder="文章来源"
-				/>
+				{#if visibleFields === null || visibleFields.has('source')}
+					<label for="articleSource" class="label">来源</label>
+					<input
+						id="articleSource"
+						type="text"
+						class="input"
+						bind:value={content.source}
+						placeholder="文章来源"
+					/>
+				{/if}
 
-				<label for="articleUrl" class="label">链接</label>
-				<input
-					id="articleUrl"
-					type="text"
-					class="input"
-					bind:value={content.url}
-					placeholder="文章链接"
-				/>
+				{#if visibleFields === null || visibleFields.has('url')}
+					<label for="articleUrl" class="label">链接</label>
+					<input
+						id="articleUrl"
+						type="text"
+						class="input"
+						bind:value={content.url}
+						placeholder="文章链接"
+					/>
+				{/if}
 
 				<button
 					class="btn mt-4 btn-primary"
@@ -120,11 +143,20 @@
 			{@const freshPageMessage =
 				normalErrorMessage.includes('Receiving end does not exist') ||
 				normalErrorMessage.includes('Could not establish connection')
-					? '无法连接到当前页面，请刷新页面后重试，或检查当前页面是否支持该扩展。'
+					? '无法连接到当前页面，请刷新当前标签页后重试，或检查当前页面是否支持该扩展。'
 					: ''}
 			{@const errorMessage = freshPageMessage || normalErrorMessage}
-			<div class="container mx-auto my-auto h-full text-center text-sm font-semibold opacity-60">
-				<p class="text-pretty">获取文章失败：{errorMessage}</p>
+			<div class="mx-4 mt-8 flex h-full w-full flex-col items-center gap-4">
+				<p class="w-full text-sm font-semibold text-wrap text-error">
+					获取文章失败：{errorMessage}
+				</p>
+
+				<button
+					class="btn rounded-2xl"
+					onclick={() => {
+						window.location.reload();
+					}}>点击重试</button
+				>
 			</div>
 		{/await}
 	</div>
@@ -163,7 +195,7 @@
 	{:else if result?.type === 'error'}
 		<div class="modal-box">
 			<h3 class="text-lg font-bold">发送失败</h3>
-			<p class="py-2">发送失败，{result.errorMessage}</p>
+			<p class="py-2">{result.errorMessage}</p>
 			<div class="modal-action">
 				<form method="dialog">
 					<button class="btn">关闭</button>
