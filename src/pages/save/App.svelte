@@ -196,7 +196,7 @@
 			<h3 class="text-lg font-bold">发送成功</h3>
 			<p class="py-2">
 				点击<a target="_blank" href={result.url} class="link-success">链接</a>
-				查看结果。对话框将在 {timeToCloseDialog} 秒后关闭。
+				查看结果。<span class=" font-bold">对话框将在 {timeToCloseDialog} 秒后关闭</span>。
 			</p>
 			<div class="modal-action">
 				<form method="dialog">
