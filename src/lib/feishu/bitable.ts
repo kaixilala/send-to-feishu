@@ -77,6 +77,9 @@ export class FeishuBitableManager {
 	 * @returns
 	 */
 	static async getBitableTables(appToken: string) {
+		if (!appToken) {
+			return [];
+		}
 		if (!credentials.tokenManager) {
 			throw new Error('未找到有效的凭据');
 		}
@@ -186,9 +189,18 @@ export class FeishuBitableManager {
 		fieldsMap: BitableFormType['fieldsMap'],
 		articleData: FetchedArticle & { feishuDocUrl?: string },
 		manualFields?: BitableManualField[],
-		manualValues?: Record<string, any>
+		manualValues?: Record<string, any>,
+		latestFields?: BitableFieldsData['items']
 	): BitablePayload {
 		const payload: BitablePayload = {};
+
+		// 创建 ID 到当前名称的映射，以防名称被修改
+		const idToNameMap: Record<string, string> = {};
+		if (latestFields) {
+			latestFields.forEach((f) => {
+				idToNameMap[f.field_id] = f.field_name;
+			});
+		}
 
 		Object.entries(fieldsMap).forEach(([articleField, bitableField]) => {
 			if (!bitableField) {
@@ -197,24 +209,27 @@ export class FeishuBitableManager {
 			}
 
 			const value = articleData[articleField as FetchedArticleField];
+			// 优先使用最新的名称
+			const columnName = idToNameMap[bitableField.id] || bitableField.name;
 
 			if (value !== undefined && value.trim() !== '') {
-				if (articleField === 'url' && bitableField.type === 15) {
+				if (bitableField.type === 15) {
 					// 链接字段，且多维表格字段类型为链接类型
-					payload[bitableField.name] = { link: value, text: value };
-					return;
-				} else if (articleField === 'feishuDocUrl' && bitableField.type === 15) {
-					// 飞书文档链接字段，且多维表格字段类型为链接类型
-					payload[bitableField.name] = { link: value, text: value };
+					// 如果已经是对象结构则直接使用，否则封装成对象
+					if (typeof value === 'string') {
+						payload[columnName] = { link: value, text: value };
+					} else {
+						payload[columnName] = value;
+					}
 					return;
 				} else if (articleField === 'published' && bitableField.type === 5) {
 					// 时间字段，且多维表格对应字段也是时间格式，转化为时间戳
 					const timestamp = new Date(value).getTime();
-					payload[bitableField.name] = timestamp;
+					payload[columnName] = timestamp;
 					return;
 				} else {
 					// 其他情况，暂时全部按字符串处理
-					payload[bitableField.name] = value;
+					payload[columnName] = value;
 					return;
 				}
 			}
@@ -224,19 +239,29 @@ export class FeishuBitableManager {
 		if (manualFields && manualValues) {
 			manualFields.forEach((field) => {
 				const value = manualValues[field.id];
-				if (value !== undefined && value !== null) {
+				// 优先使用最新的名称
+				const columnName = idToNameMap[field.columnId] || field.columnName;
+
+				if (value !== undefined && value !== null && columnName) {
 					if (field.type === 5 && value) {
 						// 日期类型转时间戳
-						payload[field.columnName] = new Date(value).getTime();
+						payload[columnName] = new Date(value).getTime();
+					} else if (field.type === 15 && value) {
+						// 链接类型
+						if (typeof value === 'string') {
+							payload[columnName] = { link: value, text: value };
+						} else {
+							payload[columnName] = value;
+						}
 					} else if (field.type === 2) {
 						// 数字类型
-						payload[field.columnName] = Number(value);
+						payload[columnName] = Number(value);
 					} else if (field.type === 18) {
 						// 复选框
-						payload[field.columnName] = Boolean(value);
+						payload[columnName] = Boolean(value);
 					} else {
 						// 文本、单选、多选等直接赋值
-						payload[field.columnName] = value;
+						payload[columnName] = value;
 					}
 				}
 			});
@@ -280,9 +305,12 @@ export class FeishuBitableManager {
 		const resData: FeishuApiResponse = await res.json();
 
 		if (resData.code !== 0) {
-			throw new Error(
+			const error: any = new Error(
 				`飞书多维表格接口报错：${resData.msg},请参考以下方式解决：https://open.feishu.cn/search?q=${resData.code}。`
 			);
+			error.code = resData.code;
+			error.msg = resData.msg;
+			throw error;
 		}
 	}
 
